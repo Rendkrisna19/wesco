@@ -1,0 +1,61 @@
+   <script>
+function loadAfrnData() {
+    const selectElement = document.getElementById('no_afrn');
+    const selectedId = selectElement.value;
+
+    if (selectedId) {
+        fetch(`insert_salibukur.php?get_data=1&id_afrn=${selectedId}&idSegel=`)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                if (data) {
+                    // Data utama
+                    document.getElementById('tanggal').value = data.tgl_afrn || '';
+                    document.getElementById('no_polisi').value = data.no_polisi || '';
+                    document.getElementById('volume_bridger').value = data.volume || '';
+                    document.getElementById('masa_berlaku_tangki').value = data.tgl_serti_akhir || '';
+
+                    // Tambahan: jarak komp
+                    document.getElementById('jarak_komp1').value = data.jarak_komp1 || '';
+                    document.getElementById('jarak_komp2').value = data.jarak_komp2 || '';
+                    document.getElementById('jarak_komp3').value = data.jarak_komp3 || '';
+                    document.getElementById('jarak_komp4').value = data.jarak_komp4 || '';
+
+                    //tambahan : destinicy
+                    document.getElementById('dencity_cair_komp1').value = data.dencity_cair_komp1 || '';
+                    document.getElementById('dencity_cair_komp2').value = data.dencity_cair_komp2 || '';
+                    document.getElementById('dencity_cair_komp3').value = data.dencity_cair_komp3 || '';
+                    document.getElementById('dencity_cair_komp4').value = data.dencity_cair_komp4 || '';
+
+                    //tambahkan temp_cair_komp_komp1
+                    document.getElementById('temp_cair_komp_komp1').value = data.temp_cair_komp_komp1 || '';
+                    document.getElementById('temp_cair_komp_komp2').value = data.temp_cair_komp_komp2 || '';
+                    document.getElementById('temp_cair_komp_komp3').value = data.temp_cair_komp_komp3 || '';
+                    document.getElementById('temp_cair_komp_komp4').value = data.temp_cair_komp_komp4 || '';
+
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat mengambil data AFRN');
+            });
+    } else {
+        // Clear all
+        ['tanggal', 'no_polisi', 'volume_bridger', 'masa_berlaku_tangki',
+            'jarak_komp1', 'jarak_komp2', 'jarak_komp3', 'jarak_komp4', 'dencity_cair_komp1', 'dencity_cair_komp2',
+            'dencity_cair_komp3 ', 'dencity_cair_komp4 ', 'temp_cair_komp_komp1', 'temp_cair_komp_komp2',
+            'temp_cair_komp_komp3', 'temp_cair_komp_komp4',
+        ].forEach(key => {
+            const el = document.getElementById(key);
+            if (data[key]) {
+                el.value = data[key];
+            } else {
+                el.value = ''; // kosongkan agar placeholder muncul
+            }
+        });
+    }
+}
+
+
+// yang terbaru 
+   </script>

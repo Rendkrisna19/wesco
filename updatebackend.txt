@@ -1,0 +1,87 @@
+<?php
+include '../config/koneksi.php';
+
+// ============================
+// 1. AJAX: Ambil data AFRN + relasi jika idSegel kosong
+// ============================
+if (isset($_GET['get_data']) && isset($_GET['id_afrn']) && empty($_GET['idSegel'])) {
+  header('Content-Type: application/json');
+  $id_afrn = mysqli_real_escape_string($conn, $_GET['id_afrn']);
+
+  $query = "SELECT 
+                segel.id_segel,
+                segel.mainhole1,
+                segel.mainhole2,
+                segel.mainhole3,
+                segel.mainhole4,
+                segel.bottom_load_cov1,
+                segel.bottom_load_cov2,
+                segel.bottom_load_cov3,
+                segel.bottom_load_cov4,
+                segel.bottom_load_cov5,
+                salib_ukur.ket_jarak_t1,
+                salib_ukur.ket_jarak_cair_t1,
+                salib_ukur.diperiksa_t1,
+                salib_ukur.diperiksa_segel,
+                jarak_t1.jarak_komp1,
+                jarak_t1.jarak_komp2,
+                jarak_t1.jarak_komp3,
+                jarak_t1.jarak_komp4,
+                jarak_t1.temp_komp1,
+                jarak_t1.temp_komp2,
+                jarak_t1.temp_komp3,
+                jarak_t1.temp_komp4,
+                jarak_cair_t1.jarak_cair_komp1,
+                jarak_cair_t1.jarak_cair_komp2,
+                jarak_cair_t1.jarak_cair_komp3,
+                jarak_cair_t1.jarak_cair_komp4,
+                jarak_cair_t1.dencity_cair_komp1,
+                jarak_cair_t1.dencity_cair_komp2,
+                jarak_cair_t1.dencity_cair_komp3,
+                jarak_cair_t1.dencity_cair_komp4,
+                jarak_cair_t1.temp_cair_komp_komp1,
+                jarak_cair_t1.temp_cair_komp_komp2,
+                jarak_cair_t1.temp_cair_komp_komp3,
+                jarak_cair_t1.temp_cair_komp_komp4,
+                afrn.no_afrn,
+                afrn.tgl_afrn,
+                afrn.no_bpp,
+                afrn.dibuat,
+                afrn.diperiksa,
+                afrn.disetujui,
+                bridger.no_polisi,
+                bridger.volume
+            FROM afrn
+        JOIN bridger ON afrn.id_bridger = bridger.id_bridger
+        JOIN salib_ukur ON salib_ukur.id_afrn = afrn.id_afrn
+        JOIN segel ON segel.id_ukur = salib_ukur.id_ukur
+        JOIN jarak_t1 ON salib_ukur.id_jarak_t1 = jarak_t1.id_jarak_t1
+        JOIN jarak_cair_t1 ON salib_ukur.id_jarak_cair_t1 = jarak_cair_t1.id_jarak_cair_t1
+        WHERE afrn.id_afrn = '$id_afrn'
+        LIMIT 1";
+
+  $result = mysqli_query($conn, $query);
+  if ($result && mysqli_num_rows($result) > 0) {
+    $data = mysqli_fetch_assoc($result);
+    echo json_encode($data);
+  } else {
+    echo json_encode(['error' => 'Data tidak ditemukan']);
+  }
+  exit;
+}
+
+// ============================
+// 2. Ambil data AFRN untuk dropdown
+// ============================
+$query_afrn = "SELECT id_afrn, no_afrn FROM afrn ORDER BY id_afrn DESC";
+$result_afrn = mysqli_query($conn, $query_afrn);
+
+// ============================
+// 3. Struktur lainnya dibiarkan di sini
+// Kamu bisa tambahkan logika get_data lainnya di bawah
+// ============================
+
+// Contoh placeholder lain:
+// if (isset($_GET['get_segel'])) { ... }
+// if (isset($_GET['get_jarak'])) { ... }
+// dst...
