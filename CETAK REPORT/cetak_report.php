@@ -1,320 +1,387 @@
+<?php
+include '../config/koneksi.php'; // Pastikan file ini mendefinisikan $conn
+
+// Ambil no_afrn dari parameter GET
+$no_afrn = isset($_GET['no_afrn']) ? $conn->real_escape_string($_GET['no_afrn']) : '';
+
+// Validasi agar tidak kosong
+if (empty($no_afrn)) {
+    die("No AFRN tidak ditemukan.");
+}
+
+$query = "SELECT 
+    a.id_afrn, a.no_afrn, a.tgl_afrn, a.no_bpp, a.id_transportir, a.id_destinasi, a.id_tangki,
+    a.dibuat, a.diperiksa, a.disetujui,
+    b.nama_trans, b.alamat_trans,
+    d.nama_destinasi, d.alamat_destinasi,
+    t.no_tangki, t.no_bacth, t.source, t.doc_url,
+    t.test_report_no, t.test_report_let, t.test_report_date,
+    t.density, t.temperature, t.cu, t.water_contamination_ter,
+    br.no_polisi, br.tgl_serti_akhir, br.volume,
+    bo.keluar_dppu, bo.mulai_pengisian, bo.selesai_pengisian, bo.water_cont_ter, bo.total_meter_akhir, bo.meter_awal,
+    c.id_driver, c.nama_driver
+FROM afrn a
+JOIN BRIDGER br ON a.id_bridger = br.id_bridger
+JOIN TRANSPORTIR b ON br.id_trans = b.id_trans
+JOIN DESTINASI d ON a.id_destinasi = d.id_destinasi
+JOIN TANGKI t ON a.id_tangki = t.id_tangki
+LEFT JOIN DRIVER c ON br.id_driver = c.id_driver
+LEFT JOIN BON bo ON a.no_afrn = bo.no_afrn
+WHERE a.no_afrn = '$no_afrn'
+LIMIT 1";
+
+$result = $conn->query($query);
+
+// Cek hasil query
+if (!$result) {
+    die("Query error: " . $conn->error);
+}
+
+$data = $result->fetch_assoc();
+
+if (!$data) {
+    die("Data tidak ditemukan untuk no_afrn: $no_afrn");
+}
+
+// Fungsi format tanggal
+function formatDate($date) {
+    if (!$date) return '';
+    return date('d F Y', strtotime($date));
+}
+
+// Fungsi untuk render satu dokumen
+function render_afrn($data) {
+?>
+<div class="afrn-copy bg-white p-2" style="width: 100%; min-height: 100%; box-sizing: border-box;">
+    <!-- Header -->
+    <div class="flex justify-between items-start p-2 ">
+        <div class="flex-1">
+            <h1 class="text-3xl font-normal leading-tight">AVIATION FUEL DELIVERY RELEASE</h1>
+            <h2 class="text-3xl font-normal leading-tight">NOTE</h2>
+            <h3 class="text-3xl font-normal leading-tight">(AFRN)</h3>
+        </div>
+        <div class="flex items-center">
+            <img src="../image/pertamina.jpg" alt="Pertamina Logo" class="h-auto w-48">
+        </div>
+    </div>
+
+    <!-- Location and Date Info -->
+    <div class="p-2 border-b border-black">
+        <div class="grid grid-cols-2 gap-8 text-xs">
+            <div class="space-y-0.5">
+                <div class="flex">
+                    <span class="font-semibold w-20 text-xs">LOCATION</span>
+                    <span class="mr-2">:</span>
+                    <span class="text-xs">SOEKARNO-HATTA AVIATION FUEL TERMINAL & HYDRANT</span>
+                </div>
+                <div class="flex">
+                    <span class="font-semibold w-20 text-xs">Vehicle Type</span>
+                    <span class="mr-2">:</span>
+                    <span class="text-xs">BRIDGER</span>
+                </div>
+                <div class="flex">
+                    <span class="font-semibold w-20 text-xs">Vehicle No.</span>
+                    <span class="mr-2">:</span>
+                    <span class="text-xs"><?php echo htmlspecialchars($data['no_polisi'] ?? '-'); ?></span>
+                </div>
+                <div class="flex">
+                    <span class="font-semibold w-20 text-xs">Trip No.</span>
+                    <span class="mr-2">:</span>
+                    <span class="text-xs"><?php echo htmlspecialchars($data['no_afrn'] ?? '-'); ?></span>
+                </div>
+                <div class="flex">
+                    <span class="font-semibold w-20 text-xs">Destination</span>
+                    <span class="mr-2">:</span>
+                    <span class="text-xs"><?php echo htmlspecialchars($data['nama_destinasi'] ?? '-'); ?></span>
+                </div>
+            </div>
+            <div class="space-y-0.5">
+                <div class="flex">
+                    <span class="font-semibold w-20 text-xs">Date</span>
+                    <span class="mr-2">:</span>
+                    <span class="text-xs"><?php echo formatDate($data['tgl_afrn'] ?? ''); ?></span>
+                </div>
+                <div class="flex">
+                    <span class="font-semibold w-20 text-xs">Installation</span>
+                    <span class="mr-2">:</span>
+                    <span class="text-xs">SHAFTH</span>
+                </div>
+                <div class="flex">
+                    <span class="font-semibold w-20 text-xs">Driver</span>
+                    <span class="mr-2">:</span>
+                    <span class="text-xs"><?php echo htmlspecialchars($data['nama_driver'] ?? '-'); ?></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex h-auto">
+        <!-- Left Column - Table -->
+        <div class="flex-1  ">
+            <table class="w-full border-collapse">
+                <thead>
+                    <tr>
+                        <th class="table-header w-32">Tank Number</th>
+                        <th class="table-header w-20"><?php echo htmlspecialchars($data['no_tangki'] ?? '-'); ?>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="table-cell">Filling Commenced</td>
+                        <td class="table-cell"><?php echo htmlspecialchars($data['mulai_pengisian'] ?? ''); ?></td>
+                    </tr>
+                    <tr>
+                        <td class="table-cell">Filling Completed</td>
+                        <td class="table-cell"><?php echo htmlspecialchars($data['selesai_pengisian'] ?? ''); ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="table-cell">Water/Contamination Test</td>
+                        <td class="table-cell">
+                            <?php echo htmlspecialchars($data['water_cont_ter'] ?? ''); ?></td>
+                    </tr>
+                    <tr>
+                        <td class="table-cell">Grade</td>
+                        <td class="table-cell">JET A-1</td>
+                    </tr>
+                    <tr>
+                        <td class="table-cell">Meter Totalizer After Filling</td>
+                        <td class="table-cell"><?php echo htmlspecialchars($data['total_meter_akhir'] ?? ''); ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="table-cell ">Meter Totalizer Before Filling</td>
+                        <td class="table-cell"><?php echo htmlspecialchars($data['meter_awal'] ?? ''); ?>
+                    </tr>
+                    <tr>
+                        <td class="table-cell">Quantity</td>
+                        <td class="table-cell"><?php echo htmlspecialchars($data['volume'] ?? ''); ?></td>
+                    </tr>
+                    <tr>
+                        <td class="table-cell">Batch Number</td>
+                        <td class="table-cell"><?php echo htmlspecialchars($data['no_bacth'] ?? ''); ?></td>
+                    </tr>
+                    <tr>
+                        <td class="table-cell">Source</td>
+                        <td class="table-cell"><?php echo htmlspecialchars($data['source'] ?? ''); ?></td>
+                    </tr>
+                    <tr>
+                        <td class="table-cell">No. Test Report & Date</td>
+                        <td class="table-cell">
+                            <?php
+                            echo htmlspecialchars($data['test_report_no'] ?? '');
+                            if (!empty($data['test_report_date'])) {
+                                echo '   <br> ' . formatDate($data['test_report_date']);
+                            }
+                            ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="table-cell">Quality Controller</td>
+                        <td class="table-cell"><?php echo htmlspecialchars($data['disetujui'] ?? ''); ?></td>
+                    </tr>
+                    <tr>
+                        <td class="table-cell">Left Installation</td>
+                        <td class="table-cell"><?php echo htmlspecialchars($data['keluar_dppu'] ?? ''); ?></td>
+                    </tr>
+                    <tr>
+                        <td class="table-cell">Arrived at Depot</td>
+                        <td class="table-cell">Hrs.</td>
+                    </tr>
+                    <tr>
+                        <td class="table-cell">Water/Contamination Test</td>
+                        <td class="table-cell">Hrs.</td>
+                    </tr>
+                    <tr>
+                        <td class="table-cell">Discharge Commenced</td>
+                        <td class="table-cell">Hrs.</td>
+                    </tr>
+                    <tr>
+                        <td class="table-cell">Discharge Completed</td>
+                        <td class="table-cell">Hrs.</td>
+                    </tr>
+                    <tr>
+                        <td class="table-cell">Quantity Arrived</td>
+                        <td class="table-cell">Liters</td>
+                    </tr>
+                    <tr>
+                        <td class="table-cell">Quality Controller</td>
+                        <td class="table-cell"></td>
+                    </tr>
+                    <tr>
+                        <td class="table-cell">Left Depot</td>
+                        <td class="table-cell">Hrs.</td>
+                    </tr>
+                    <tr>
+                        <td class="table-cell">Arrived at Installation/Depot</td>
+                        <td class="table-cell"></td>
+                    </tr>
+                    <tr>
+                        <td class="table-cell">Quality Controller</td>
+                        <td class="table-cell"></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table class="w-full border-collapse mt-4 mb-2 min-h-24">
+                <tr class="h-24">
+                    <td class="table-cell align-top text-sm px-2 py-4 border border-black">
+                        Receive Free From Water
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Right Column -->
+        <div class="w-64 p-2">
+            <!-- Vehicle Note Section -->
+            <div class="mb-3">
+                <h1 class="font-bold">Vehicle Note</h1>
+                <div class="text-xs mb-1">
+                    <span class="font-normal"> Type of Product Filling :</span>
+                    <span class="ml-2">JET A-1</span>
+                </div>
+                <div class=" text-xs mb-1 ">Date of Cleaning/Draining</div>
+                <div class=" text-xs mb-1 ">Checked By Quality Controller</div>
+                <div class=" text-xs ">Instruction Number</div>
+            </div>
+
+            <div class="border-2 border-black p-3 mb-3 text-center">
+                <div class="text-xs font-semibold mb-2">Certified Water Free By</div>
+                <div class="flex items-center justify-center">
+                    <img src="../image/image.png" alt="Pertamina Logo" class="h-auto w-28">
+                </div>
+            </div>
+
+            <!-- Certification Text -->
+            <div class="text-xs mb-3 leading-tight">
+                <div class="font-semibold mb-1">Certified</div>
+                <div class="mb-0.5">That this item enumerated hereon has been inspected</div>
+                <div class="mb-0.5">and tested in accordance with contract condition and the</div>
+                <div class="mb-0.5">Pertamina Quality Control Scheme C.F</div>
+                <div class="mb-0.5">a. That it conforms to Specification.</div>
+                <div class="mb-0.5">b. That Stand 31-94 latest issue.</div>
+                <div class="mb-0.5">c. That has been released under Authority of quality</div>
+                <div class="mb-2">Pertamina Quality Control Scheme of :</div>
+            </div>
+
+            <!-- Quality Data Box -->
+            <div class="border border-black p-2 text-xs mb-5">
+                <div class="grid grid-cols-2 gap-x-1 gap-y-0.5">
+                    <span class="font-medium">BPP/PNP Num.</span>
+                    <span><?php echo htmlspecialchars($data['no_bpp'] ?? '-'); ?></span>
+                    <span class="font-medium">DENSITY OBSD</span>
+                    <span><?php echo htmlspecialchars($data['density'] ?? '-'); ?></span>
+                    <span class="font-medium">TEMP OBSD</span>
+                    <span><?php echo htmlspecialchars($data['temperature'] ?? '-'); ?></span>
+                    <span class="font-medium">CU</span>
+                    <span><?php echo htmlspecialchars($data['cu'] ?? '-'); ?></span>
+                </div>
+            </div>
+            <div class="text-center p-2 border border-black p-2 text-xs">
+                <div class="text-xs mb-1">Quality Control Sign</div>
+                <div class="flex items-center justify-center mb-1 ">
+                    <img src=../image/pertamina.jpg alt="Pertamina Logo Small" class="h-auto w-28">
+                </div>
+                <div class=" text-xs mb-1">J. Supervisor I Rev. Str. 4 Dist
+                </div>
+                <div class="text-sm font-semibold">HERMANTO PURBA</div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Aviation Fuel Delivery Release Note</title>
-    <link href="css/sb-admin-2.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <style>
     body {
-        color: #000;
-        font-family: Arial, sans-serif;
+        font-family: 'Poppins', sans-serif;
         margin: 0;
-        padding: 20px;
+        padding: 0;
+        background: #fff;
     }
 
-    .container {
-        border: 1px solid #000;
-        padding: 20px;
-        background-color: #fff;
-        border-radius: 5px;
+    @media print {
+        @page {
+            size: A4 landscape;
+            margin: 0;
+        }
+
+        html,
+        body {
+            width: 297mm;
+            height: 210mm;
+        }
+
+        .print-container {
+            width: 297mm;
+            height: 210mm;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .afrn-copy {
+            page-break-inside: avoid;
+        }
     }
 
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    .print-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        width: 297mm;
+        height: 210mm;
+        margin: 0 auto;
+        box-sizing: border-box;
+        background: #fff;
     }
 
-    h2 {
-        margin: 0;
+    .afrn-copy {
+        border-right: 1px dashed #bbb;
+        min-height: 100%;
+        box-sizing: border-box;
     }
 
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 10px 0;
+    .afrn-copy:last-child {
+        border-right: none;
     }
 
-    td,
-    th {
+    .table-cell {
         border: 1px solid black;
-        padding: 8px;
-        text-align: left;
+        padding: 2px 4px;
+        font-size: 9px;
     }
 
-    .center {
-        text-align: center;
-    }
-
-    .tables td {
-        border-top: 1px solid black;
-        border-bottom: 1px solid black;
-        padding: 4px;
+    .table-header {
+        border: 1px solid black;
+        padding: 2px 4px;
+        font-size: 9px;
+        font-weight: 600;
+        background-color: #f5f5f5;
     }
     </style>
 </head>
 
-<body onload="window.print();">
-    <div class="container">
-        <div class="header">
-            <h2>AVIATION FUEL DELIVERY RELEASE NOTE <br>(AFRN)</h2>
-            <img src="../image/pertamina.jpg" style="height: 50px;">
-        </div>
-
-        <div>
-            <table>
-                <tr>
-                    <td><b>LOCATION</b></td>
-                    <td>:</td>
-                    <td>SOEKARNO-HATA AVIATION FUEL TERMINAL & HYDRANT</td>
-                </tr>
-                <tr>
-                    <td>Vehicle Type</td>
-                    <td>:</td>
-                    <td>BRIDGER</td>
-                    <td>Date</td>
-                    <td>:</td>
-                    <td>9 April 2024</td>
-                </tr>
-                <tr>
-                    <td>Vehicle No.</td>
-                    <td>:</td>
-                    <td>L 9156 UU</td>
-                    <td>Installation</td>
-                    <td>:</td>
-                    <td>SHAFTHI</td>
-                </tr>
-                <tr>
-                    <td>Trip No.</td>
-                    <td>:</td>
-                    <td>1</td>
-                    <td>Driver</td>
-                    <td>:</td>
-                    <td>GENDON</td>
-                </tr>
-                <tr>
-                    <td>Destination</td>
-                    <td>:</td>
-                    <td>PERTAMINA DPPU PONDOK CABE</td>
-                </tr>
-            </table>
-        </div>
-
-        <div class="row">
-            <div class="col-6">
-                <table class="tables">
-                    <tr>
-                        <td style="width:50%;">Tank Number</td>
-                        <td colspan="3" style="text-align:center;"><b>T.101</b></td>
-                    </tr>
-                    <tr>
-                        <td>Filling Commenced</td>
-                        <td colspan="2">10:00</td>
-                        <td>Hrs.</td>
-                    </tr>
-                    <tr>
-                        <td>Filling Completed</td>
-                        <td colspan="2">10:25</td>
-                        <td>Hrs.</td>
-                    </tr>
-                    <tr>
-                        <td>Water/Contamination Test</td>
-                        <td colspan="2">10:30</td>
-                        <td>Hrs.</td>
-                    </tr>
-                    <tr>
-                        <td>Grade</td>
-                        <td colspan="2"><b>JET A-1</b></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Meter Totalizer After Filling</td>
-                        <td colspan="2">42,522,640</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Meter Totalizer Before Filling</td>
-                        <td colspan="2">42,498,636</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Quantity</td>
-                        <td colspan="2"><b>24.000 LITRES</b></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Batch Number</td>
-                        <td colspan="2">SKH/T.101/274</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Source</td>
-                        <td colspan="2">SKH/T.107/059</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>No. Test Report & Date</td>
-                        <td colspan="2">00322</td>
-                        <td>15 MARET 2024</td>
-                    </tr>
-                    <tr>
-                        <td>Quality Controller</td>
-                        <td colspan="2">RIZALDI</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Left Installation</td>
-                        <td colspan="2"><b>14:02</b></td>
-                        <td>Hrs.</td>
-                    </tr>
-                    <tr>
-                        <td>Arrived at Depot</td>
-                        <td colspan="2"></td>
-                        <td>Hrs.</td>
-                    </tr>
-                    <tr>
-                        <td>Water/Contamination Test</td>
-                        <td colspan="2"></td>
-                        <td>Hrs.</td>
-                    </tr>
-                    <tr>
-                        <td>Discharge Commenced</td>
-                        <td colspan="2"></td>
-                        <td>Hrs.</td>
-                    </tr>
-                    <tr>
-                        <td>Discharge Completed</td>
-                        <td colspan="2"></td>
-                        <td>Hrs.</td>
-                    </tr>
-                    <tr>
-                        <td>Quantity Arrived</td>
-                        <td colspan="2"></td>
-                        <td>Liters</td>
-                    </tr>
-                    <tr>
-                        <td>Quality Controller</td>
-                        <td colspan="2"></td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Left Depot</td>
-                        <td colspan="2"></td>
-                        <td>Hrs.</td>
-                    </tr>
-                    <tr>
-                        <td>Arrived at Installation/Depot Quality Controller</td>
-                        <td colspan="2"></td>
-                        <td></td>
-                    </tr>
-                </table>
-            </div>
-
-            <div class="col-6">
-                <table>
-                    <tr>
-                        <td colspan="3"><b>Vehicle Note</b></td>
-                    </tr>
-                    <tr>
-                        <td>Last Type of Product Filling</td>
-                        <td>:</td>
-                        <td><b>JET A-1</b></td>
-                    </tr>
-                    <tr>
-                        <td>Date of Cleaning/Draining</td>
-                        <td>:</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Checked By Quality Controller</td>
-                        <td>:</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Instruction Number</td>
-                        <td>:</td>
-                        <td></td>
-                    </tr>
-                </table>
-                <br>
-
-                <table class="center tables" width="50%" style="border:1px solid black;">
-                    <tr>
-                        <td>
-                            <b>Certified Water Free By</b>
-                            <br><br><br><br><br><br>
-                            Quality Control Sign & Mark
-                        </td>
-                    </tr>
-                </table>
-
-                <br>
-                <b>Certified</b><br>
-                That this item enumerated hereon has been Inspected <br>
-                and tested in accordance with contract condition and the <br>
-                Pertamina Quality Control Scheme C F <br>
-                a. That it confirms to Specification: <br>
-                &nbsp;&nbsp;&nbsp;<b>Def Stand 91-91 latest issue</b> <br>
-                b. That this has been released under Authority of quality <br>
-                Pertamina Quality Control Scheme of:
-                <br><br>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-6">
-                <table class="tables" style="width:100%; border-left:1px solid black; border-right:1px solid black;">
-                    <tr>
-                        <td style="border-bottom: 0px solid black;">&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td style="border-top: 0px solid black; border-bottom: 0px solid black;">Receive Free From Water
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="border-top: 0px solid black; border-bottom: 0px solid black;">&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td style="border-top: 0px solid black; border-bottom: 0px solid black;">Quality Control Sign &
-                            Mark</td>
-                    </tr>
-                    <tr>
-                        <td style="border-top: 0px solid black;">&nbsp;</td>
-                    </tr>
-                </table>
-            </div>
-
-            <div class="col-6">
-                <table class="center tables" width="60%">
-                    <tr>
-                        <td style="padding:10px 0px 0px 10px;">BPP/PNBP Num.</td>
-                        <td>: 8106590006</td>
-                    </tr>
-                    <tr>
-                        <td style="padding:10px 0px 0px 10px;">DENSITY OBS'D</td>
-                        <td>: 0,7860 Kg/Liter</td>
-                    </tr>
-                    <tr>
-                        <td style="padding:10px 0px 0px 10px;">TEMP OBS'D</td>
-                        <td>: 30,00 C</td>
-                    </tr>
-                    <tr>
-                        <td style="padding:10px 0px 10px 10px;">CU</td>
-                        <td>: 148 p.S/m</td>
-                    </tr>
-                </table>
-
-                <br>
-                <div class="text-center">Quality Control Sign</div>
-                <br>
-            </div>
-        </div>
+<body>
+    <div class="print-container">
+        <?php render_afrn($data); ?>
+        <?php render_afrn($data); ?>
     </div>
 </body>
-
 <script>
 window.onload = function() {
     window.print();
@@ -322,3 +389,4 @@ window.onload = function() {
 </script>
 
 </html>
+<?php $conn->close(); ?>

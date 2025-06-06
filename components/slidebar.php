@@ -29,7 +29,7 @@
 
             <nav class="flex flex-col py-4 space-y-1 text-sm">
                 <!-- Active Link -->
-                <a href="#"
+                <a href="../home/index.php"
                     class="group relative flex items-center gap-3 px-6 py-3 text-blue-600 bg-blue-50 font-semibold">
                     <i data-lucide="home" class="w-5 h-5"></i>
                     Dashboard
@@ -101,7 +101,7 @@
                         class="absolute bottom-0 left-6 right-6 h-0.5 bg-blue-500 scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300"></span>
                 </a>
 
-                <a href="#"
+                <a href="../ADMIN/dashboard.php"
                     class="group relative flex items-center gap-3 px-6 py-3 text-gray-500 hover:text-blue-600 hover:bg-gray-50 transition-all">
                     <i data-lucide="settings" class="w-5 h-5"></i>
                     Admin

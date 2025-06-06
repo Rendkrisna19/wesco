@@ -1,4 +1,17 @@
 <?php
+session_start(); 
+
+
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    // If not logged in, redirect to login page
+    header("Location: ../auth/index.php");
+    exit;
+}
+
+$id_user = $_SESSION['id_user'];
+$username = $_SESSION['username'];
+// Assuming nama_lengkap is also set in session from login
+$nama_lengkap = isset($_SESSION['nama_lengkap']) ? $_SESSION['nama_lengkap'] : $username;
 // Koneksi ke database
 include '../config/koneksi.php'; // koneksi menggunakan $conn
 
@@ -66,13 +79,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- Main content -->
         <main class="flex-1 flex flex-col bg-gray-50">
             <!-- Header -->
-            <header class="bg-white p-6 flex justify-between items-center shadow-sm">
-                <h1 class="text-2xl font-bold text-cyan-900">Selamat Datang di Wesco Hermanto Purba</h1>
-                <div class="flex items-center gap-3">
-                    <span class="text-gray-600">Hermanto Purba</span>
-                    <img src="user-icon.png" alt="User" class="w-8 h-8 rounded-full" />
+            <div class="bg-white shadow p-6 flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-cyan-700">Selamat Datang di Wesco,
+                    <?= htmlspecialchars($nama_lengkap) ?>!</h1>
+                <div class="flex items-center space-x-3">
+                    <span class="text-gray-600"><?= htmlspecialchars($nama_lengkap) ?></span>
+                    <img src="https://media.istockphoto.com/id/1300845620/id/vektor/ikon-pengguna-datar-terisolasi-pada-latar-belakang-putih-simbol-pengguna-ilustrasi-vektor.jpg?s=612x612&w=0&k=20&c=QN0LOsRwA1dHZz9lsKavYdSqUUnis3__FQLtZTQ--Ro="
+                        alt="User" class="w-8 h-8 rounded-full">
                 </div>
-            </header>
+            </div>
 
             <section class="flex-1 p-10 bg-white shadow rounded-lg">
                 <h1 class="text-xl font-semibold  text-gray-700 mb-2">Form Tambah Data Tangki</h1>

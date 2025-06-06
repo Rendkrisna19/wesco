@@ -14,6 +14,7 @@ function loadAfrnData() {
                     document.getElementById('no_polisi').value = data.no_polisi || '';
                     document.getElementById('volume_bridger').value = data.volume || '';
                     document.getElementById('tgl_serti_akhir').value = data.tgl_serti_akhir || '';
+                    document.getElementById('tgl_rekam').value = data.tgl_rekam || '';
 
                     // Tambahan: jarak komp
                     document.getElementById('jarak_komp1').value = data.jarak_komp1 || '186.5';
@@ -41,8 +42,8 @@ function loadAfrnData() {
     } else {
         // Clear all
         [
-            'tanggal', 'no_polisi', 'volume_bridger', 'masa_berlaku_tangki',
-            'jarak_komp1', 'jarak_komp2', 'jarak_komp3', 'jarak_komp4',
+            'tanggal', 'no_polisi', 'volume_bridger', 'masa_berlaku_tangki', 'tgl_afrn',
+            'jarak_komp3', 'jarak_komp4',
             'dencity_cair_komp1', 'dencity_cair_komp2', 'dencity_cair_komp3', 'dencity_cair_komp4',
             'temp_cair_komp_komp1', 'temp_cair_komp_komp2', 'temp_cair_komp_komp3', 'temp_cair_komp_komp4'
         ].forEach(key => {

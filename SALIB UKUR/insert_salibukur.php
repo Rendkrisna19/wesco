@@ -1,4 +1,17 @@
 <?php
+session_start(); 
+
+
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    // If not logged in, redirect to login page
+    header("Location: ../auth/index.php");
+    exit;
+}
+
+$id_user = $_SESSION['id_user'];
+$username = $_SESSION['username'];
+// Assuming nama_lengkap is also set in session from login
+$nama_lengkap = isset($_SESSION['nama_lengkap']) ? $_SESSION['nama_lengkap'] : $username;
 include('backend_salib_ukur.php');
 include('ajax_salibukur.php');
 ?>
@@ -36,10 +49,12 @@ include('ajax_salibukur.php');
         <div class="flex-1 flex flex-col">
             <!-- Header -->
             <div class="bg-white shadow p-6 flex justify-between items-center">
-                <h1 class="text-2xl font-bold text-cyan-900">Selamat Datang di Wesco Hermanto Purba</h1>
-                <div class="flex items-center gap-3">
-                    <span class="text-gray-600">Hermanto Purba</span>
-                    <img src="user-icon.png" alt="User" class="w-8 h-8 rounded-full">
+                <h1 class="text-2xl font-bold text-cyan-700">Selamat Datang di Wesco,
+                    <?= htmlspecialchars($nama_lengkap) ?>!</h1>
+                <div class="flex items-center space-x-3">
+                    <span class="text-gray-600"><?= htmlspecialchars($nama_lengkap) ?></span>
+                    <img src="https://media.istockphoto.com/id/1300845620/id/vektor/ikon-pengguna-datar-terisolasi-pada-latar-belakang-putih-simbol-pengguna-ilustrasi-vektor.jpg?s=612x612&w=0&k=20&c=QN0LOsRwA1dHZz9lsKavYdSqUUnis3__FQLtZTQ--Ro="
+                        alt="User" class="w-8 h-8 rounded-full">
                 </div>
             </div>
             <div class="max-w-7xl mx-auto bg-white rounded-lg shadow-lg">
@@ -66,6 +81,8 @@ include('ajax_salibukur.php');
                                     <option value="<?= $row['id_afrn'] ?>"><?= $row['no_afrn'] ?></option>
                                     <?php endwhile; ?>
                                 </select>
+
+
                             </div>
 
                             <div>
@@ -368,9 +385,9 @@ include('ajax_salibukur.php');
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="text-sm font-normal block mb-1">Jam Keluar</label>
-                            <input type="text" name="jam_keluar"
-                                class="w-full bg-gray-100 border rounded px-3 py-2 text-sm cursor-not-allowed"
-                                value="14:04:00" readonly disabled>
+                            <input type="text" name="tgl_rekam" id="tgl_rekam"
+                                class="w-full bg-gray-100 border rounded px-3 py-2 text-sm cursor-not-allowed" readonly
+                                disabled>
                         </div>
                         <div>
                             <label class="text-sm font-normal block mb-1">Diperiksa & Dicatat Oleh</label>

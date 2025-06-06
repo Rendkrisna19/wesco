@@ -1,5 +1,5 @@
 <?php
-include '../config/koneksi.php'; 
+include '../config/koneksi.php';
 
 // Ambil semua data yang dibutuhkan
 $bridger_result = mysqli_query($conn, "
@@ -7,9 +7,26 @@ $bridger_result = mysqli_query($conn, "
     FROM bridger
     LEFT JOIN transportir ON bridger.id_trans = transportir.id_trans
 ");
+// Reset pointer agar bisa digunakan lagi di loop form jika dibutuhkan, atau jika query ini sudah final
+mysqli_data_seek($bridger_result, 0); 
+
+
 $destinasi_result = mysqli_query($conn, "SELECT * FROM destinasi");
+mysqli_data_seek($destinasi_result, 0); 
+
+
 $driver_result = mysqli_query($conn, "SELECT * FROM driver");
+mysqli_data_seek($driver_result, 0); 
+
+
 $tangki_result = mysqli_query($conn, "SELECT * FROM tangki");
+mysqli_data_seek($tangki_result, 0); 
+
+// Inisialisasi variabel untuk pesan SweetAlert
+$swal_icon = '';
+$swal_title = '';
+$swal_text = '';
+$swal_redirect_url = '';
 
 // Jika form disubmit
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -18,7 +35,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $no_bpp = mysqli_real_escape_string($conn, $_POST['no_bpp']);
     $id_bridger = $_POST['id_bridger'];
     $id_destinasi = $_POST['id_destinasi'];
-    $id_driver = $_POST['id_driver'];
+    $id_driver = $_POST['id_driver']; // Variabel ini ada, tapi tidak digunakan di INSERT AFRN
     $id_tangki = $_POST['id_tangki'];
     $dibuat = mysqli_real_escape_string($conn, $_POST['dibuat']);
     $diperiksa = mysqli_real_escape_string($conn, $_POST['diperiksa']);
@@ -30,25 +47,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         SELECT id_trans FROM bridger WHERE id_bridger = '$id_bridger'
     ");
     if (mysqli_num_rows($get_trans) == 0) {
-        die("ID Bridger tidak ditemukan.");
-    }
-    $id_transportasi = mysqli_fetch_assoc($get_trans)['id_trans'];
-
-    $query = "INSERT INTO afrn (
-        tgl_afrn, no_afrn, no_bpp, id_bridger, id_transportir, id_destinasi, id_tangki,
-        dibuat, diperiksa, disetujui, rit
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-    $stmt = mysqli_prepare($conn, $query);
-    mysqli_stmt_bind_param($stmt, "sssiiiisssi",
-        $tgl_afrn, $no_afrn, $no_bpp, $id_bridger, $id_transportasi, $id_destinasi,
-        $id_tangki, $dibuat, $diperiksa, $disetujui, $rit
-    );
-
-    if (mysqli_stmt_execute($stmt)) {
-        echo "<script>alert('Data AFRN berhasil disimpan!'); window.location.href='index.php';</script>";
+        // Set pesan SweetAlert error
+        $swal_icon = 'error';
+        $swal_title = 'Gagal!';
+        $swal_text = 'ID Bridger tidak ditemukan.';
     } else {
-        echo "<script>alert('Gagal menyimpan data AFRN: " . mysqli_error($conn) . "');</script>";
+        $id_transportasi = mysqli_fetch_assoc($get_trans)['id_trans'];
+
+        $query = "INSERT INTO afrn (
+            tgl_afrn, no_afrn, no_bpp, id_bridger, id_transportir, id_destinasi, id_tangki,
+            dibuat, diperiksa, disetujui, rit
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        $stmt = mysqli_prepare($conn, $query);
+        mysqli_stmt_bind_param($stmt, "sssiiiisssi",
+            $tgl_afrn, $no_afrn, $no_bpp, $id_bridger, $id_transportasi, $id_destinasi,
+            $id_tangki, $dibuat, $diperiksa, $disetujui, $rit
+        );
+
+        if (mysqli_stmt_execute($stmt)) {
+            $swal_icon = 'success';
+            $swal_title = 'Berhasil!';
+            $swal_text = 'Data AFRN berhasil disimpan!';
+            $swal_redirect_url = 'index.php'; // Arahkan ke index.php setelah SweetAlert ditutup
+        } else {
+            $swal_icon = 'error';
+            $swal_title = 'Gagal!';
+            $swal_text = 'Gagal menyimpan data AFRN: ' . mysqli_error($conn);
+        }
     }
 }
 ?>
@@ -58,21 +84,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Input AFRN</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 </head>
 
 <body class="bg-white font-modify">
     <div class="flex min-h-screen">
 
-        <!-- Sidebar -->
         <div class="w-64 bg-white shadow-md">
             <?php include '../components/slidebar.php'; ?>
         </div>
 
-        <!-- Main content -->
         <div class="flex-1 flex flex-col">
-            <!-- Header -->
             <div class="bg-white shadow p-6 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-cyan-900">Selamat Datang di Wesco Hermanto Purba</h1>
                 <div class="flex items-center gap-3">
@@ -81,7 +106,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </div>
             </div>
 
-            <!-- Form Section -->
             <div class="flex-1 p-10 bg-white">
                 <h2 class="text-2xl font-semibold mb-6">Form Input Data AFRN</h2>
                 <form action="" method="POST" class="space-y-6">
@@ -92,14 +116,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             placeholder="Contoh: 123/BPP/2025">
                     </div>
 
-                    <!-- Bridger -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="block font-medium">Nomor Polisi</label>
                             <select name="id_bridger" id="bridger" class="w-full p-2 border rounded" required
                                 onchange="setBridgerData(this)">
                                 <option class="text-gray-300 font-sm font-normal" value="">Pilih nomor polisi </option>
-                                <?php while ($b = mysqli_fetch_assoc($bridger_result)): ?>
+                                <?php // Reset pointer for $bridger_result before looping again for the form
+                                mysqli_data_seek($bridger_result, 0); 
+                                while ($b = mysqli_fetch_assoc($bridger_result)): ?>
                                 <option value="<?= $b['id_bridger'] ?>" data-transportir="<?= $b['transportir'] ?>"
                                     data-volume="<?= $b['volume'] ?>">
                                     <?= $b['no_polisi'] ?>
@@ -117,13 +142,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </div>
                     </div>
 
-                    <!-- Destinasi & Driver -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block font-medium">Kepada</label>
                             <select name="id_destinasi" class="w-full p-2 border rounded" required>
                                 <option value="">Pilih destinasi</option>
-                                <?php while ($d = mysqli_fetch_assoc($destinasi_result)): ?>
+                                <?php // Reset pointer for $destinasi_result
+                                mysqli_data_seek($destinasi_result, 0);
+                                while ($d = mysqli_fetch_assoc($destinasi_result)): ?>
                                 <option class="text-gray-300 font-sm font-normal" value="<?= $d['id_destinasi'] ?>">
                                     <?= $d['nama_destinasi'] ?></option>
                                 <?php endwhile; ?>
@@ -133,28 +159,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <label class="block font-medium">Pengemudi</label>
                             <select name="id_driver" class="w-full p-2 border rounded" required>
                                 <option class="text-gray-300 text-sm text-normal" value="">Pilih Pengemudi </option>
-                                <?php while ($p = mysqli_fetch_assoc($driver_result)): ?>
+                                <?php // Reset pointer for $driver_result
+                                mysqli_data_seek($driver_result, 0);
+                                while ($p = mysqli_fetch_assoc($driver_result)): ?>
                                 <option value="<?= $p['id_driver'] ?>"><?= $p['nama_driver'] ?></option>
                                 <?php endwhile; ?>
                             </select>
                         </div>
                     </div>
 
-                    <!-- RIT -->
                     <div>
                         <label class="block font-medium">RIT</label>
                         <input type="number" name="rit" class="w-full p-2 border rounded" required
                             placeholder="Contoh: 1">
                     </div>
 
-                    <!-- Tangki -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block font-medium">No Tangki</label>
                             <select name="id_tangki" id="tangki" class="w-full p-2 border rounded" required
                                 onchange="setTangkiData(this)">
                                 <option value="">Pilih Nomor tangki-</option>
-                                <?php while ($t = mysqli_fetch_assoc($tangki_result)): ?>
+                                <?php // Reset pointer for $tangki_result
+                                mysqli_data_seek($tangki_result, 0);
+                                while ($t = mysqli_fetch_assoc($tangki_result)): ?>
                                 <option class="text-gray-300 text-sm text-normal" value="<?= $t['id_tangki'] ?>"
                                     data-no_batch="<?= $t['no_bacth'] ?>" data-source="<?= $t['source'] ?>"
                                     data-test_report="<?= $t['test_report_let'] ?>" data-density="<?= $t['density'] ?>"
@@ -179,7 +207,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </div>
                     </div>
 
-                    <!-- Penanggung Jawab -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <input type="text" name="dibuat" class="p-2 border rounded" required placeholder="Dibuat Oleh">
                         <input type="text" name="diperiksa" class="p-2 border rounded" required
@@ -214,6 +241,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             document.getElementById("cu").value = opt.dataset.cu || '';
         }
         </script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+
+        <?php if ($swal_icon): // Tampilkan SweetAlert jika ada pesan ?>
+        <script>
+        Swal.fire({
+            icon: '<?php echo $swal_icon; ?>',
+            title: '<?php echo $swal_title; ?>',
+            text: '<?php echo $swal_text; ?>',
+            showConfirmButton: true,
+            confirmButtonText: 'OK'
+        }).then((result) => {
+            <?php if ($swal_redirect_url): ?>
+            if (result.isConfirmed) {
+                window.location.href = '<?php echo $swal_redirect_url; ?>';
+            }
+            <?php endif; ?>
+        });
+        </script>
+        <?php endif; ?>
 </body>
 
 </html>

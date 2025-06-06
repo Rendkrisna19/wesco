@@ -1,4 +1,20 @@
 <?php 
+
+session_start(); 
+
+
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    // If not logged in, redirect to login page
+    header("Location: ../auth/index.php");
+    exit;
+}
+
+$id_user = $_SESSION['id_user'];
+$username = $_SESSION['username'];
+// Assuming nama_lengkap is also set in session from login
+$nama_lengkap = isset($_SESSION['nama_lengkap']) ? $_SESSION['nama_lengkap'] : $username;
+
+
 include '../config/koneksi.php';
 
 // Hitung total data AFRN
@@ -43,13 +59,14 @@ $offset = ($page - 1) * $limit;
         <div class="flex-1 flex flex-col">
             <!-- Header -->
             <div class="bg-white shadow p-6 flex justify-between items-center">
-                <h1 class="text-2xl font-bold text-cyan-700">Selamat Datang di Wesco Hermanto Purba</h1>
+                <h1 class="text-2xl font-bold text-cyan-700">Selamat Datang di Wesco,
+                    <?= htmlspecialchars($nama_lengkap) ?>!</h1>
                 <div class="flex items-center space-x-3">
-                    <span class="text-gray-600">Hermanto Purba</span>
-                    <img src="user-icon.png" alt="User" class="w-8 h-8 rounded-full">
+                    <span class="text-gray-600"><?= htmlspecialchars($nama_lengkap) ?></span>
+                    <img src="https://media.istockphoto.com/id/1300845620/id/vektor/ikon-pengguna-datar-terisolasi-pada-latar-belakang-putih-simbol-pengguna-ilustrasi-vektor.jpg?s=612x612&w=0&k=20&c=QN0LOsRwA1dHZz9lsKavYdSqUUnis3__FQLtZTQ--Ro="
+                        alt="User" class="w-8 h-8 rounded-full">
                 </div>
             </div>
-
             <!-- Page Content -->
             <div class="p-6 flex-1 overflow-y-auto">
                 <div class="flex justify-between items-center mb-4">
