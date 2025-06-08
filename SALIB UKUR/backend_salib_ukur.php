@@ -52,7 +52,7 @@ if (isset($_GET['get_data']) && isset($_GET['id_afrn']) && empty($_GET['idSegel'
                 bridger.no_polisi,
                 bridger.volume,
                 bridger.tgl_serti_akhir,
-                bon.tgl_rekam
+                bon.keluar_dppu
             FROM afrn
         LEFT JOIN bridger ON afrn.id_bridger = bridger.id_bridger
         LEFT JOIN salib_ukur ON salib_ukur.id_afrn = afrn.id_afrn

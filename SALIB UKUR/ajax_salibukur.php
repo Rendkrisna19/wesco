@@ -14,7 +14,7 @@ function loadAfrnData() {
                     document.getElementById('no_polisi').value = data.no_polisi || '';
                     document.getElementById('volume_bridger').value = data.volume || '';
                     document.getElementById('tgl_serti_akhir').value = data.tgl_serti_akhir || '';
-                    document.getElementById('tgl_rekam').value = data.tgl_rekam || '';
+                    document.getElementById('keluar_dppu').value = data.keluar_dppu || '';
 
                     // Tambahan: jarak komp
                     document.getElementById('jarak_komp1').value = data.jarak_komp1 || '186.5';

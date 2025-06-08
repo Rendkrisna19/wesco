@@ -1,7 +1,6 @@
 <?php
 
-session_start(); 
-
+session_start();
 
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     // If not logged in, redirect to login page
@@ -15,7 +14,8 @@ $username = $_SESSION['username'];
 $nama_lengkap = isset($_SESSION['nama_lengkap']) ? $_SESSION['nama_lengkap'] : $username;
 include '../config/koneksi.php';
 
-
+$success_message = '';
+$error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_trans = $_POST['id_trans'];
@@ -30,15 +30,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $tera3 = $_POST['tera3'];
     $tera4 = $_POST['tera4'];
 
-    $query = "INSERT INTO bridger (id_trans, no_polisi, tgl_serti_akhir, id_tipe_bridger, volume, tera1, tera2, tera3, tera4) 
-              VALUES ('$id_trans', '$no_polisi', '$tgl_akhir', '$id_tipe_bridger', '$volume', '$tera1', '$tera2', '$tera3', '$tera4')";
+    // Use prepared statements to prevent SQL injection
+    $stmt = $conn->prepare("INSERT INTO bridger (id_trans, no_polisi, tgl_serti_akhir, id_tipe_bridger, volume, tera1, tera2, tera3, tera4) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("isssissss", $id_trans, $no_polisi, $tgl_akhir, $id_tipe_bridger, $volume, $tera1, $tera2, $tera3, $tera4);
 
-    if ($conn->query($query)) {
-        header("Location: index.php");
-        exit;
+    if ($stmt->execute()) {
+        $success_message = "Data bridger berhasil disimpan!";
     } else {
-        echo "Gagal menyimpan data: " . $conn->error;
+        $error_message = "Gagal menyimpan data: " . $stmt->error;
     }
+    $stmt->close();
 }
 
 $transportir = $conn->query("SELECT id_trans, nama_trans FROM transportir");
@@ -50,19 +51,18 @@ $transportir = $conn->query("SELECT id_trans, nama_trans FROM transportir");
 <head>
     <title>Form Bridger</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 </head>
 
 <body class="bg-white font-modify">
     <div class="flex min-h-screen">
 
-        <!-- Sidebar -->
         <div class="w-64 bg-white shadow-md">
             <?php include '../components/slidebar.php'; ?>
         </div>
 
-        <!-- Main content -->
         <div class="flex-1 flex flex-col">
-            <!-- Header -->
             <div class="bg-white shadow p-6 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-cyan-700">Selamat Datang di Wesco,
                     <?= htmlspecialchars($nama_lengkap) ?>!</h1>
@@ -80,7 +80,7 @@ $transportir = $conn->query("SELECT id_trans, nama_trans FROM transportir");
                     <select name="id_trans" class="w-full border px-4 py-2 rounded mb-4" required>
                         <option value="">Pilih Transportir</option>
                         <?php while ($row = $transportir->fetch_assoc()): ?>
-                        <option value="<?= $row['id_trans'] ?>"><?= $row['nama_trans'] ?></option>
+                        <option value="<?= $row['id_trans'] ?>"><?= htmlspecialchars($row['nama_trans']) ?></option>
                         <?php endwhile; ?>
                     </select>
 
@@ -127,6 +127,34 @@ $transportir = $conn->query("SELECT id_trans, nama_trans FROM transportir");
                     </div>
                 </form>
             </div>
+        </div>
+    </div>
+
+    <?php if ($success_message): ?>
+    <script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: '<?= $success_message ?>',
+        confirmButtonText: 'OK'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = 'index.php'; // Redirect after user clicks OK
+        }
+    });
+    </script>
+    <?php endif; ?>
+
+    <?php if ($error_message): ?>
+    <script>
+    Swal.fire({
+        icon: 'error',
+        title: 'Error!',
+        text: '<?= $error_message ?>',
+        confirmButtonText: 'OK'
+    });
+    </script>
+    <?php endif; ?>
 </body>
 
 </html>

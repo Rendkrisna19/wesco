@@ -1,6 +1,5 @@
 <?php
-session_start(); 
-
+session_start();
 
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     // If not logged in, redirect to login page
@@ -10,38 +9,49 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 
 $id_user = $_SESSION['id_user'];
 $username = $_SESSION['username'];
-// Assuming nama_lengkap is also set in session from login
 $nama_lengkap = isset($_SESSION['nama_lengkap']) ? $_SESSION['nama_lengkap'] : $username;
 include '../config/koneksi.php';
 
-if (empty($_GET['idBon'])) {
-    $query = "SELECT 
-                bon.id_bon, bon.tgl_rekam, bon.jlh_pengisian, 
-                afrn.no_afrn, bridger.no_polisi
-              FROM bon
-              LEFT JOIN afrn ON bon.no_afrn = afrn.no_afrn
-              LEFT JOIN bridger ON afrn.id_bridger = bridger.id_bridger
-              ORDER BY bon.tgl_rekam DESC";
-              
-    $result = mysqli_query($conn, $query);
-    if (!$result) {
-        die("Query Error: " . mysqli_error($conn));
-    }
-} else {
-    $idBon = intval($_GET['idBon']);
-    $query = "SELECT 
-                bon.id_bon, bon.tgl_rekam, bon.jlh_pengisian, 
-                afrn.no_afrn, bridger.no_polisi
-              FROM bon
-              LEFT JOIN afrn ON bon.no_afrn = afrn.no_afrn
-              LEFT JOIN bridger ON afrn.id_bridger = bridger.id_bridger
-              WHERE bon.id_bon = $idBon";
+// --- Pagination Settings ---
+$limit = 10; // Jumlah record per halaman
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $limit;
 
-    $result = mysqli_query($conn, $query);
-    if (!$result) {
-        die("Query Error: " . mysqli_error($conn));
-    }
+// --- Query untuk menghitung total record ---
+$count_query = "SELECT COUNT(*) AS total_records FROM bon";
+if (!empty($_GET['idBon'])) {
+    $idBonFilter = intval($_GET['idBon']);
+    $count_query .= " WHERE id_bon = " . $idBonFilter;
 }
+$count_result = mysqli_query($conn, $count_query);
+if (!$count_result) {
+    die("Count Query Error: " . mysqli_error($conn));
+}
+$total_records = mysqli_fetch_assoc($count_result)['total_records'];
+$total_pages = ceil($total_records / $limit);
+// --- End Pagination Settings ---
+
+
+// --- Main Query with LIMIT and OFFSET ---
+$main_query = "SELECT
+                bon.id_bon, bon.tgl_rekam, bon.jlh_pengisian,
+                afrn.no_afrn, bridger.no_polisi
+              FROM bon
+              LEFT JOIN afrn ON bon.no_afrn = afrn.no_afrn
+              LEFT JOIN bridger ON afrn.id_bridger = bridger.id_bridger";
+
+if (!empty($_GET['idBon'])) {
+    $idBonFilter = intval($_GET['idBon']);
+    $main_query .= " WHERE bon.id_bon = " . $idBonFilter;
+}
+
+$main_query .= " ORDER BY bon.tgl_rekam DESC LIMIT $limit OFFSET $offset";
+
+$result = mysqli_query($conn, $main_query);
+if (!$result) {
+    die("Main Query Error: " . mysqli_error($conn));
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -51,18 +61,20 @@ if (empty($_GET['idBon'])) {
     <meta charset="UTF-8">
     <title>Daftar BON</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+    .font-modify {
+        font-family: sans-serif;
+    }
+    </style>
 </head>
 
 <body class="bg-white font-modify">
     <div class="flex min-h-screen">
-        <!-- Sidebar -->
         <div class="w-64 bg-white shadow-md">
             <?php include '../components/slidebar.php'; ?>
         </div>
 
-        <!-- Main content -->
         <div class="flex-1 flex flex-col">
-            <!-- Header -->
             <div class="bg-white shadow p-6 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-cyan-700">Selamat Datang di Wesco,
                     <?= htmlspecialchars($nama_lengkap) ?>!</h1>
@@ -73,7 +85,6 @@ if (empty($_GET['idBon'])) {
                 </div>
             </div>
 
-            <!-- Content -->
             <div class="flex-1 p-10 bg-white">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-bold text-gray-700">DAFTAR BON</h2>
@@ -97,10 +108,10 @@ if (empty($_GET['idBon'])) {
                         </thead>
                         <tbody class="text-gray-700">
                             <?php
-                            $no = 1;
-                            while ($row = mysqli_fetch_assoc($result)) {
-                                // Jika no_polisi NULL tampilkan tanda '-'
-                                $no_polisi = !empty($row['no_polisi']) ? htmlspecialchars($row['no_polisi']) : '-';
+                            $no = $offset + 1; // Start numbering from the correct offset
+                            if (mysqli_num_rows($result) > 0) {
+                                while ($row = mysqli_fetch_assoc($result)) {
+                                    $no_polisi = !empty($row['no_polisi']) ? htmlspecialchars($row['no_polisi']) : '-';
                             ?>
                             <tr class="border-b hover:bg-gray-50">
                                 <td class="px-4 py-2"><?= $no++ ?></td>
@@ -115,13 +126,68 @@ if (empty($_GET['idBon'])) {
                                     </a>
                                 </td>
                             </tr>
+                            <?php
+                                }
+                            } else {
+                            ?>
+                            <tr>
+                                <td colspan="6" class="p-4 text-center text-gray-500">Tidak ada data BON ditemukan.</td>
+                            </tr>
                             <?php } ?>
                         </tbody>
                     </table>
 
-                    <?php if (mysqli_num_rows($result) === 0) : ?>
-                    <p class="p-4 text-center text-gray-500">Tidak ada data BON ditemukan.</p>
-                    <?php endif; ?>
+                    <?php if ($total_pages > 1) { ?>
+                    <div class="flex justify-center items-center mt-4 mb-4">
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            <?php if ($page > 1) { ?>
+                            <a href="?page=<?= $page - 1 ?><?= !empty($_GET['idBon']) ? '&idBon=' . htmlspecialchars($_GET['idBon']) : '' ?>"
+                                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-blue-700 hover:bg-gray-50">
+                                Previous
+                            </a>
+                            <?php } ?>
+
+                            <?php
+                            // Tentukan rentang nomor halaman yang akan ditampilkan (misal: 2 halaman di kiri dan 2 di kanan dari halaman aktif)
+                            $start_page = max(1, $page - 2);
+                            $end_page = min($total_pages, $page + 2);
+
+                            // Jika halaman awal terlalu jauh dari 1, tampilkan "..."
+                            if ($start_page > 1) {
+                                echo '<a href="?page=1'. (!empty($_GET['idBon']) ? '&idBon=' . htmlspecialchars($_GET['idBon']) : '') . '" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-blue-700 hover:bg-gray-50">1</a>';
+                                if ($start_page > 2) {
+                                    echo '<span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>';
+                                }
+                            }
+
+                            for ($i = $start_page; $i <= $end_page; $i++) {
+                                $active_class = ($i == $page) ? 'z-10 bg-blue-600 text-white' : 'bg-white text-blue-700 hover:bg-blue-50';
+                            ?>
+                            <a href="?page=<?= $i ?><?= !empty($_GET['idBon']) ? '&idBon=' . htmlspecialchars($_GET['idBon']) : '' ?>"
+                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium <?= $active_class ?> ">
+                                <?= $i ?>
+                            </a>
+                            <?php } ?>
+
+                            <?php
+                            // Jika halaman akhir terlalu jauh dari total_pages, tampilkan "..."
+                            if ($end_page < $total_pages) {
+                                if ($end_page < $total_pages - 1) {
+                                    echo '<span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>';
+                                }
+                                echo '<a href="?page=' . $total_pages . (!empty($_GET['idBon']) ? '&idBon=' . htmlspecialchars($_GET['idBon']) : '') . '" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-blue-700 hover:bg-gray-50">' . $total_pages . '</a>';
+                            }
+                            ?>
+
+                            <?php if ($page < $total_pages) { ?>
+                            <a href="?page=<?= $page + 1 ?><?= !empty($_GET['idBon']) ? '&idBon=' . htmlspecialchars($_GET['idBon']) : '' ?>"
+                                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-blue-700 hover:bg-gray-50">
+                                Next
+                            </a>
+                            <?php } ?>
+                        </nav>
+                    </div>
+                    <?php } ?>
                 </div>
             </div>
         </div>

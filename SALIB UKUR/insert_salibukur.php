@@ -385,7 +385,7 @@ include('ajax_salibukur.php');
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="text-sm font-normal block mb-1">Jam Keluar</label>
-                            <input type="text" name="tgl_rekam" id="tgl_rekam"
+                            <input type="text" name="keluar_dppu" id="keluar_dppu"
                                 class="w-full bg-gray-100 border rounded px-3 py-2 text-sm cursor-not-allowed" readonly
                                 disabled>
                         </div>

@@ -14,13 +14,23 @@ $username = $_SESSION['username'];
 $nama_lengkap = isset($_SESSION['nama_lengkap']) ? $_SESSION['nama_lengkap'] : $username;
 include '../config/koneksi.php';
 
-if (isset($_POST['insert'])) {
-    $nama = $conn->real_escape_string($_POST['nama_trans']);
-    $alamat = $conn->real_escape_string($_POST['alamat_trans']);
+$success_message = '';
+$error_message = '';
 
-    $conn->query("INSERT INTO transportir (nama_trans, alamat_trans) VALUES ('$nama', '$alamat')");
-    header("Location: index.php");
-    exit;
+if (isset($_POST['insert'])) {
+    // Use prepared statements to prevent SQL injection
+    $nama = $_POST['nama_trans'];
+    $alamat = $_POST['alamat_trans'];
+
+    $stmt = $conn->prepare("INSERT INTO transportir (nama_trans, alamat_trans) VALUES (?, ?)");
+    $stmt->bind_param("ss", $nama, $alamat);
+
+    if ($stmt->execute()) {
+        $success_message = "Data transportir berhasil ditambahkan!";
+    } else {
+        $error_message = "Gagal menambahkan data: " . $stmt->error;
+    }
+    $stmt->close();
 }
 ?>
 
@@ -31,19 +41,18 @@ if (isset($_POST['insert'])) {
     <meta charset="UTF-8" />
     <title>Tambah Transportir</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 </head>
 
 <body class="bg-white font-modify">
     <div class="flex min-h-screen">
 
-        <!-- Sidebar -->
         <div class="w-64 bg-white shadow-md">
             <?php include '../components/slidebar.php'; ?>
         </div>
 
-        <!-- Main content -->
         <div class="flex-1 flex flex-col">
-            <!-- Header -->
             <div class="bg-white shadow p-6 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-cyan-700">Selamat Datang di Wesco,
                     <?= htmlspecialchars($nama_lengkap) ?>!</h1>
@@ -54,7 +63,6 @@ if (isset($_POST['insert'])) {
                 </div>
             </div>
 
-            <!-- Form Section -->
             <div class="flex-1 p-10 bg-white">
                 <h2 class="text-xl font-bold mb-6 text-gray-700">Tambah Transportir</h2>
 
@@ -78,6 +86,32 @@ if (isset($_POST['insert'])) {
             </div>
         </div>
     </div>
+
+    <?php if ($success_message): ?>
+    <script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: '<?= $success_message ?>',
+        confirmButtonText: 'OK'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = 'index.php'; // Redirect after user clicks OK
+        }
+    });
+    </script>
+    <?php endif; ?>
+
+    <?php if ($error_message): ?>
+    <script>
+    Swal.fire({
+        icon: 'error',
+        title: 'Error!',
+        text: '<?= $error_message ?>',
+        confirmButtonText: 'OK'
+    });
+    </script>
+    <?php endif; ?>
 </body>
 
 </html>

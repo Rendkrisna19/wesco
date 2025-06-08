@@ -9,7 +9,7 @@ if (empty($no_afrn)) {
     die("No AFRN tidak ditemukan.");
 }
 
-$query = "SELECT 
+$query = "SELECT
     a.id_afrn, a.no_afrn, a.tgl_afrn, a.no_bpp, a.id_transportir, a.id_destinasi, a.id_tangki,
     a.dibuat, a.diperiksa, a.disetujui,
     b.nama_trans, b.alamat_trans,
@@ -26,7 +26,7 @@ JOIN TRANSPORTIR b ON br.id_trans = b.id_trans
 JOIN DESTINASI d ON a.id_destinasi = d.id_destinasi
 JOIN TANGKI t ON a.id_tangki = t.id_tangki
 LEFT JOIN DRIVER c ON br.id_driver = c.id_driver
-LEFT JOIN BON bo ON a.no_afrn = bo.no_afrn
+LEFT JOIN BON bo ON a.id_bon = bo.id_bon -- Join BON melalui id_bon di AFRN
 WHERE a.no_afrn = '$no_afrn'
 LIMIT 1";
 
@@ -45,86 +45,91 @@ if (!$data) {
 
 // Fungsi format tanggal
 function formatDate($date) {
-    if (!$date) return '';
+    if (!$date || $date === '0000-00-00' || $date === 'NULL') return '';
     return date('d F Y', strtotime($date));
 }
 
-// Fungsi untuk render satu dokumen
+// Fungsi untuk render satu dokumen AFRN
 function render_afrn($data) {
 ?>
-<div class="afrn-copy bg-white p-2" style="width: 100%; min-height: 100%; box-sizing: border-box;">
-    <!-- Header -->
-    <div class="flex justify-between items-start p-2 ">
-        <div class="flex-1">
-            <h1 class="text-3xl font-normal leading-tight">AVIATION FUEL DELIVERY RELEASE</h1>
-            <h2 class="text-3xl font-normal leading-tight">NOTE</h2>
-            <h3 class="text-3xl font-normal leading-tight">(AFRN)</h3>
+<div class="afrn-copy bg-white">
+    <div class="header-section flex justify-between items-start">
+        <div class="title-block flex-1">
+            <h1 class="text-xs-force leading-tight font-normal">AVIATION FUEL DELIVERY RELEASE</h1>
+            <h2 class="text-xs-force leading-tight font-normal">NOTE</h2>
+            <h3 class="text-xs-force leading-tight font-normal">(AFRN)</h3>
         </div>
-        <div class="flex items-center">
-            <img src="../image/pertamina.jpg" alt="Pertamina Logo" class="h-auto w-48">
+        <div class="logo-block">
+            <img src="../image/pertamina.jpg" alt="Pertamina Logo" class="h-auto w-12">
         </div>
     </div>
 
-    <!-- Location and Date Info -->
-    <div class="p-2 border-b border-black">
-        <div class="grid grid-cols-2 gap-8 text-xs">
+    <div class="info-section border-b border-black">
+        <div class="grid grid-cols-2 gap-x-2 text-xxs-force">
             <div class="space-y-0.5">
                 <div class="flex">
-                    <span class="font-semibold w-20 text-xs">LOCATION</span>
-                    <span class="mr-2">:</span>
-                    <span class="text-xs">SOEKARNO-HATTA AVIATION FUEL TERMINAL & HYDRANT</span>
+                    <span class="font-semibold w-16">LOCATION</span>
+                    <span class="mr-1">:</span>
+                    <span class="">SOEKARNO-HATTA AVIATION FUEL TERMINAL & HYDRANT</span>
                 </div>
                 <div class="flex">
-                    <span class="font-semibold w-20 text-xs">Vehicle Type</span>
-                    <span class="mr-2">:</span>
-                    <span class="text-xs">BRIDGER</span>
+                    <span class="font-semibold w-16">Vehicle Type</span>
+                    <span class="mr-1">:</span>
+                    <span class="">BRIDGER</span>
                 </div>
                 <div class="flex">
-                    <span class="font-semibold w-20 text-xs">Vehicle No.</span>
-                    <span class="mr-2">:</span>
-                    <span class="text-xs"><?php echo htmlspecialchars($data['no_polisi'] ?? '-'); ?></span>
+                    <span class="font-semibold w-16">Vehicle No.</span>
+                    <span class="mr-1">:</span>
+                    <span class=""><?php echo htmlspecialchars($data['no_polisi'] ?? '-'); ?></span>
                 </div>
                 <div class="flex">
-                    <span class="font-semibold w-20 text-xs">Trip No.</span>
-                    <span class="mr-2">:</span>
-                    <span class="text-xs"><?php echo htmlspecialchars($data['no_afrn'] ?? '-'); ?></span>
+                    <span class="font-semibold w-16">Trip No.</span>
+                    <span class="mr-1">:</span>
+                    <span class=""><?php echo htmlspecialchars($data['no_afrn'] ?? '-'); ?></span>
                 </div>
                 <div class="flex">
-                    <span class="font-semibold w-20 text-xs">Destination</span>
-                    <span class="mr-2">:</span>
-                    <span class="text-xs"><?php echo htmlspecialchars($data['nama_destinasi'] ?? '-'); ?></span>
+                    <span class="font-semibold w-16">Destination</span>
+                    <span class="mr-1">:</span>
+                    <span class=""><?php echo htmlspecialchars($data['nama_destinasi'] ?? '-'); ?></span>
                 </div>
             </div>
             <div class="space-y-0.5">
                 <div class="flex">
-                    <span class="font-semibold w-20 text-xs">Date</span>
-                    <span class="mr-2">:</span>
-                    <span class="text-xs"><?php echo formatDate($data['tgl_afrn'] ?? ''); ?></span>
+                    <span class="font-semibold w-16">Date</span>
+                    <span class="mr-1">:</span>
+                    <span class=""><?php echo formatDate($data['tgl_afrn'] ?? ''); ?></span>
                 </div>
                 <div class="flex">
-                    <span class="font-semibold w-20 text-xs">Installation</span>
-                    <span class="mr-2">:</span>
-                    <span class="text-xs">SHAFTH</span>
+                    <span class="font-semibold w-16">Installation</span>
+                    <span class="mr-1">:</span>
+                    <span class="">SHAFTH</span>
                 </div>
                 <div class="flex">
-                    <span class="font-semibold w-20 text-xs">Driver</span>
-                    <span class="mr-2">:</span>
-                    <span class="text-xs"><?php echo htmlspecialchars($data['nama_driver'] ?? '-'); ?></span>
+                    <span class="font-semibold w-16">Driver</span>
+                    <span class="mr-1">:</span>
+                    <span class=""><?php echo htmlspecialchars($data['nama_driver'] ?? '-'); ?></span>
+                </div>
+                <div class="flex">
+                    <span class="font-semibold w-16">BPP/PNBP</span>
+                    <span class="mr-1">:</span>
+                    <span class=""><?php echo htmlspecialchars($data['no_bpp'] ?? '-'); ?></span>
+                </div>
+                <div class="flex">
+                    <span class="font-semibold w-16">Transportir</span>
+                    <span class="mr-1">:</span>
+                    <span class=""><?php echo htmlspecialchars($data['nama_trans'] ?? '-'); ?></span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="flex h-auto">
-        <!-- Left Column - Table -->
-        <div class="flex-1  ">
+    <div class="main-content-tables flex h-auto">
+        <div class="flex-1 left-column">
             <table class="w-full border-collapse">
                 <thead>
                     <tr>
-                        <th class="table-header w-32">Tank Number</th>
-                        <th class="table-header w-20"><?php echo htmlspecialchars($data['no_tangki'] ?? '-'); ?>
-                        </th>
+                        <th class="table-header w-24">Tank Number</th>
+                        <th class="table-header w-16"><?php echo htmlspecialchars($data['no_tangki'] ?? '-'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -134,13 +139,11 @@ function render_afrn($data) {
                     </tr>
                     <tr>
                         <td class="table-cell">Filling Completed</td>
-                        <td class="table-cell"><?php echo htmlspecialchars($data['selesai_pengisian'] ?? ''); ?>
-                        </td>
+                        <td class="table-cell"><?php echo htmlspecialchars($data['selesai_pengisian'] ?? ''); ?></td>
                     </tr>
                     <tr>
                         <td class="table-cell">Water/Contamination Test</td>
-                        <td class="table-cell">
-                            <?php echo htmlspecialchars($data['water_cont_ter'] ?? ''); ?></td>
+                        <td class="table-cell"><?php echo htmlspecialchars($data['water_cont_ter'] ?? ''); ?></td>
                     </tr>
                     <tr>
                         <td class="table-cell">Grade</td>
@@ -148,16 +151,15 @@ function render_afrn($data) {
                     </tr>
                     <tr>
                         <td class="table-cell">Meter Totalizer After Filling</td>
-                        <td class="table-cell"><?php echo htmlspecialchars($data['total_meter_akhir'] ?? ''); ?>
-                        </td>
+                        <td class="table-cell"><?php echo number_format($data['total_meter_akhir'] ?? 0); ?></td>
                     </tr>
                     <tr>
-                        <td class="table-cell ">Meter Totalizer Before Filling</td>
-                        <td class="table-cell"><?php echo htmlspecialchars($data['meter_awal'] ?? ''); ?>
+                        <td class="table-cell">Meter Totalizer Before Filling</td>
+                        <td class="table-cell"><?php echo number_format($data['meter_awal'] ?? 0); ?></td>
                     </tr>
                     <tr>
                         <td class="table-cell">Quantity</td>
-                        <td class="table-cell"><?php echo htmlspecialchars($data['volume'] ?? ''); ?></td>
+                        <td class="table-cell"><?php echo number_format($data['volume'] ?? 0); ?></td>
                     </tr>
                     <tr>
                         <td class="table-cell">Batch Number</td>
@@ -172,8 +174,8 @@ function render_afrn($data) {
                         <td class="table-cell">
                             <?php
                             echo htmlspecialchars($data['test_report_no'] ?? '');
-                            if (!empty($data['test_report_date'])) {
-                                echo '   <br> ' . formatDate($data['test_report_date']);
+                            if (!empty($data['test_report_date']) && $data['test_report_date'] !== '0000-00-00') {
+                                echo '<br>' . formatDate($data['test_report_date']);
                             }
                             ?>
                         </td>
@@ -188,23 +190,23 @@ function render_afrn($data) {
                     </tr>
                     <tr>
                         <td class="table-cell">Arrived at Depot</td>
-                        <td class="table-cell">Hrs.</td>
+                        <td class="table-cell"></td>
                     </tr>
                     <tr>
                         <td class="table-cell">Water/Contamination Test</td>
-                        <td class="table-cell">Hrs.</td>
+                        <td class="table-cell"></td>
                     </tr>
                     <tr>
                         <td class="table-cell">Discharge Commenced</td>
-                        <td class="table-cell">Hrs.</td>
+                        <td class="table-cell"></td>
                     </tr>
                     <tr>
                         <td class="table-cell">Discharge Completed</td>
-                        <td class="table-cell">Hrs.</td>
+                        <td class="table-cell"></td>
                     </tr>
                     <tr>
                         <td class="table-cell">Quantity Arrived</td>
-                        <td class="table-cell">Liters</td>
+                        <td class="table-cell"></td>
                     </tr>
                     <tr>
                         <td class="table-cell">Quality Controller</td>
@@ -212,7 +214,7 @@ function render_afrn($data) {
                     </tr>
                     <tr>
                         <td class="table-cell">Left Depot</td>
-                        <td class="table-cell">Hrs.</td>
+                        <td class="table-cell"></td>
                     </tr>
                     <tr>
                         <td class="table-cell">Arrived at Installation/Depot</td>
@@ -225,50 +227,48 @@ function render_afrn($data) {
                 </tbody>
             </table>
 
-            <table class="w-full border-collapse mt-4 mb-2 min-h-24">
-                <tr class="h-24">
-                    <td class="table-cell align-top text-sm px-2 py-4 border border-black">
-                        Receive Free From Water
-                    </td>
-                </tr>
+            <table class="w-full border-collapse mt-1">
+                <tbody>
+                    <tr>
+                        <td class="table-cell align-top p-1">
+                            Receive Free From Water
+                        </td>
+                    </tr>
+                </tbody>
             </table>
         </div>
 
-        <!-- Right Column -->
-        <div class="w-64 p-2">
-            <!-- Vehicle Note Section -->
-            <div class="mb-3">
-                <h1 class="font-bold">Vehicle Note</h1>
-                <div class="text-xs mb-1">
+        <div class="right-column">
+            <div class="section-box text-xxs-force mb-1">
+                <h1 class="font-bold border-b border-black pb-0.5 mb-0.5">Vehicle Note</h1>
+                <div class="mb-0.5">
                     <span class="font-normal"> Type of Product Filling :</span>
-                    <span class="ml-2">JET A-1</span>
+                    <span class="ml-1">JET A-1</span>
                 </div>
-                <div class=" text-xs mb-1 ">Date of Cleaning/Draining</div>
-                <div class=" text-xs mb-1 ">Checked By Quality Controller</div>
-                <div class=" text-xs ">Instruction Number</div>
+                <div class="mb-0.5">Date of Cleaning/Draining</div>
+                <div class="mb-0.5">Checked By Quality Controller</div>
+                <div class="">Instruction Number</div>
             </div>
 
-            <div class="border-2 border-black p-3 mb-3 text-center">
-                <div class="text-xs font-semibold mb-2">Certified Water Free By</div>
+            <div class="section-box certified-box text-xxs-force text-center mb-1">
+                <div class="font-semibold mb-0.5">Certified Water Free By</div>
                 <div class="flex items-center justify-center">
-                    <img src="../image/image.png" alt="Pertamina Logo" class="h-auto w-28">
+                    <img src="../image/image.png" alt="QC Stamp" class="h-auto w-16">
                 </div>
             </div>
 
-            <!-- Certification Text -->
-            <div class="text-xs mb-3 leading-tight">
-                <div class="font-semibold mb-1">Certified</div>
+            <div class="text-xxs-force mb-1 leading-tight">
+                <div class="font-semibold mb-0.5">Certified</div>
                 <div class="mb-0.5">That this item enumerated hereon has been inspected</div>
                 <div class="mb-0.5">and tested in accordance with contract condition and the</div>
                 <div class="mb-0.5">Pertamina Quality Control Scheme C.F</div>
                 <div class="mb-0.5">a. That it conforms to Specification.</div>
                 <div class="mb-0.5">b. That Stand 31-94 latest issue.</div>
                 <div class="mb-0.5">c. That has been released under Authority of quality</div>
-                <div class="mb-2">Pertamina Quality Control Scheme of :</div>
+                <div class="mb-0.5">Pertamina Quality Control Scheme of :</div>
             </div>
 
-            <!-- Quality Data Box -->
-            <div class="border border-black p-2 text-xs mb-5">
+            <div class="section-box text-xxs-force mb-1">
                 <div class="grid grid-cols-2 gap-x-1 gap-y-0.5">
                     <span class="font-medium">BPP/PNP Num.</span>
                     <span><?php echo htmlspecialchars($data['no_bpp'] ?? '-'); ?></span>
@@ -280,14 +280,13 @@ function render_afrn($data) {
                     <span><?php echo htmlspecialchars($data['cu'] ?? '-'); ?></span>
                 </div>
             </div>
-            <div class="text-center p-2 border border-black p-2 text-xs">
-                <div class="text-xs mb-1">Quality Control Sign</div>
-                <div class="flex items-center justify-center mb-1 ">
-                    <img src=../image/pertamina.jpg alt="Pertamina Logo Small" class="h-auto w-28">
+            <div class="section-box text-xxs-force text-center">
+                <div class="mb-0.5">Quality Control Sign</div>
+                <div class="flex items-center justify-center mb-0.5 ">
+                    <img src="../image/pertamina.jpg" alt="Pertamina Logo Small" class="h-auto w-16">
                 </div>
-                <div class=" text-xs mb-1">J. Supervisor I Rev. Str. 4 Dist
-                </div>
-                <div class="text-sm font-semibold">HERMANTO PURBA</div>
+                <div class="mb-0.5">J. Supervisor I Rev. Str. 4 Dist</div>
+                <div class="text-xs-force font-semibold">HERMANTO PURBA</div>
             </div>
         </div>
     </div>
@@ -312,66 +311,205 @@ function render_afrn($data) {
         margin: 0;
         padding: 0;
         background: #fff;
+        color: #000;
+        /* Ensure text is black */
+    }
+
+    /* Custom utility classes for very small fonts */
+    .text-xxs-force {
+        font-size: 7.5px !important;
+        /* Extremely small font */
+        line-height: 1 !important;
+    }
+
+    .text-xs-force {
+        font-size: 10px !important;
+        /* Slightly larger for titles */
+        line-height: 1.1 !important;
     }
 
     @media print {
         @page {
             size: A4 landscape;
+            /* 297mm x 210mm */
             margin: 0;
+            /* No page margins */
         }
 
         html,
         body {
             width: 297mm;
             height: 210mm;
+            overflow: hidden;
+            /* Prevent scrollbars */
         }
 
         .print-container {
+            display: flex;
+            /* Use flexbox for side-by-side */
+            flex-direction: row;
             width: 297mm;
             height: 210mm;
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            border: none;
+            /* No outer border for the whole page */
+            background: #fff;
         }
 
         .afrn-copy {
+            width: 50%;
+            /* Each copy takes exactly half the page width */
+            height: 100%;
+            /* Each copy takes full page height */
+            box-sizing: border-box;
+            border: 0.25mm solid black;
+            /* Thin border between copies */
+            padding: 2mm;
+            /* Minimal padding inside each copy */
+            display: flex;
+            flex-direction: column;
+            /* Stack sections vertically */
+            justify-content: space-between;
+            /* Distribute space vertically */
             page-break-inside: avoid;
+            /* Keep each copy together */
         }
-    }
 
-    .print-container {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0;
-        width: 297mm;
-        height: 210mm;
-        margin: 0 auto;
-        box-sizing: border-box;
-        background: #fff;
-    }
+        .afrn-copy:first-child {
+            border-right: none;
+            /* No border in the middle if you prefer a single line */
+        }
 
-    .afrn-copy {
-        border-right: 1px dashed #bbb;
-        min-height: 100%;
-        box-sizing: border-box;
-    }
+        .afrn-copy:last-child {
+            border-left: none;
+            /* No border in the middle if you prefer a single line */
+        }
 
-    .afrn-copy:last-child {
-        border-right: none;
-    }
 
-    .table-cell {
-        border: 1px solid black;
-        padding: 2px 4px;
-        font-size: 9px;
-    }
+        .header-section {
+            padding: 0.5mm 0;
+            /* Minimal padding */
+            margin-bottom: 0.5mm;
+        }
 
-    .table-header {
-        border: 1px solid black;
-        padding: 2px 4px;
-        font-size: 9px;
-        font-weight: 600;
-        background-color: #f5f5f5;
+        .header-section .title-block h1,
+        .header-section .title-block h2,
+        .header-section .title-block h3 {
+            margin: 0;
+            padding: 0;
+        }
+
+        .header-section .logo-block img {
+            width: 35mm;
+            /* Adjust logo size */
+        }
+
+        .info-section {
+            padding: 0.5mm 0;
+            /* Minimal padding */
+            margin-bottom: 0.5mm;
+            border-bottom: 0.25mm solid black;
+            /* Thin border */
+        }
+
+        .info-section .grid {
+            gap: 2mm;
+            /* Reduce gap */
+        }
+
+        .info-section .flex span {
+            margin-right: 0.5mm;
+            /* Reduce gap */
+        }
+
+        .info-section .flex .w-16 {
+            width: 15mm;
+            /* Adjust fixed width for labels */
+        }
+
+
+        .main-content-tables {
+            flex-grow: 1;
+            /* Allow tables section to grow */
+            display: flex;
+            flex-direction: row;
+            /* Columns side-by-side */
+            gap: 1mm;
+            /* Small gap between left and right columns */
+        }
+
+        .left-column {
+            flex: 1;
+            /* Left column takes available space */
+            padding-right: 0.5mm;
+        }
+
+        .right-column {
+            width: 45mm;
+            /* Fixed width for right column */
+            padding-left: 0.5mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            /* Space out sections vertically */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1mm;
+            /* Reduce margin */
+        }
+
+        .table-header,
+        .table-cell {
+            border: 0.25mm solid black;
+            /* Thin border */
+            padding: 0.5mm 1mm;
+            /* Minimal padding */
+            font-size: 7.5px;
+            /* Consistent small font */
+            line-height: 1.1;
+            vertical-align: top;
+        }
+
+        .table-header {
+            font-weight: 600;
+            background-color: #f5f5f5;
+            text-align: center;
+        }
+
+        .section-box {
+            border: 0.25mm solid black;
+            padding: 1mm;
+            /* Minimal padding for boxes */
+            margin-bottom: 1mm;
+            /* Minimal margin */
+        }
+
+        .section-box h1 {
+            font-size: 8px !important;
+            /* Adjust font size for box titles */
+            border-bottom: 0.25mm solid black;
+            padding-bottom: 0.5mm;
+            margin-bottom: 0.5mm;
+        }
+
+        .section-box img {
+            width: 25mm;
+            /* Adjust logo size in boxes */
+        }
+
+        .certified-box {
+            height: 35mm;
+            /* Fixed height for certified box */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
     }
     </style>
 </head>

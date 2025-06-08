@@ -1,10 +1,19 @@
 <?php
-include '../config/koneksi.php';
+session_start();
 
-if (isset($_GET['id_afrn'])) {
+// Redirect jika belum login (optional, tergantung alur aplikasi Anda)
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    header("Location: ../auth/index.php");
+    exit;
+}
+
+include '../config/koneksi.php'; // koneksi mysqli
+
+// Ambil ID dari parameter GET
+if (isset($_GET['id_afrn'])) { // Menggunakan id_afrn untuk pengambilan data
     $id_afrn = mysqli_real_escape_string($conn, $_GET['id_afrn']);
 
-    $query = "SELECT 
+    $query = "SELECT
                 segel.id_segel,
                 segel.mainhole1,
                 segel.mainhole2,
@@ -48,26 +57,27 @@ if (isset($_GET['id_afrn'])) {
                 bridger.no_polisi,
                 bridger.volume,
                 bridger.tgl_serti_akhir,
-                bon.tgl_rekam
+                bon.tgl_rekam,
+                bon.keluar_dppu -- Pastikan kolom ini diambil dari tabel bon
             FROM afrn
-        LEFT JOIN bridger ON afrn.id_bridger = bridger.id_bridger
-        LEFT JOIN salib_ukur ON salib_ukur.id_afrn = afrn.id_afrn
-        LEFT JOIN bon ON afrn.id_bon = bon.id_bon
-        LEFT JOIN segel ON segel.id_ukur = salib_ukur.id_ukur
-        LEFT JOIN jarak_t1 ON salib_ukur.id_jarak_t1 = jarak_t1.id_jarak_t1
-        LEFT JOIN jarak_cair_t1 ON salib_ukur.id_jarak_cair_t1 = jarak_cair_t1.id_jarak_cair_t1
-        WHERE afrn.id_afrn = '$id_afrn'
-        LIMIT 1";
+            LEFT JOIN bridger ON afrn.id_bridger = bridger.id_bridger
+            LEFT JOIN salib_ukur ON salib_ukur.id_afrn = afrn.id_afrn
+            LEFT JOIN bon ON afrn.id_bon = bon.id_bon -- Join ke tabel bon
+            LEFT JOIN segel ON segel.id_ukur = salib_ukur.id_ukur
+            LEFT JOIN jarak_t1 ON salib_ukur.id_jarak_t1 = jarak_t1.id_jarak_t1
+            LEFT JOIN jarak_cair_t1 ON salib_ukur.id_jarak_cair_t1 = jarak_cair_t1.id_jarak_cair_t1
+            WHERE afrn.id_afrn = '$id_afrn'
+            LIMIT 1";
 
     $result = mysqli_query($conn, $query);
 
     if ($result && mysqli_num_rows($result) > 0) {
         $data = mysqli_fetch_assoc($result);
     } else {
-        die("Data tidak ditemukan");
+        die("Data tidak ditemukan untuk AFRN ID: " . htmlspecialchars($id_afrn));
     }
 } else {
-    die("Parameter id_afrn dibutuhkan");
+    die("Parameter id_afrn dibutuhkan.");
 }
 
 // Fungsi untuk menampilkan isi form (agar tidak duplikasi kode)
@@ -182,10 +192,10 @@ function print_form($data) {
                 </tr>
             </table>
         </td>
-        <td style="text-align:center;">16:00:00</td>
+        <td style="text-align:center; vertical-align:middle;"><?= htmlspecialchars($data['keluar_dppu']) ?></td>
         <td colspan="2" class="ttd">
             <img src="../image/stempel.png" alt="Logo Pertamina">
-            <div class="nama"><?= htmlspecialchars($data['diperiksa_t1']) ?></div>
+            <div class="nama"><?= htmlspecialchars($data['diperiksa_segel']) ?></div>
         </td>
     </tr>
 </table>
@@ -219,130 +229,165 @@ function print_form($data) {
     @media print {
         @page {
             size: A4 landscape;
-            margin: 10mm;
+            margin: 5mm;
+            /* Mengurangi margin halaman */
         }
 
         body {
             margin: 0;
             padding: 0;
+            font-size: 9px;
+            /* Mengurangi ukuran font dasar */
+            -webkit-print-color-adjust: exact;
+            /* Pastikan warna latar belakang dicetak */
+        }
+
+        .wrapper {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 100%;
+            gap: 5mm;
+            /* Mengurangi jarak antar kontainer */
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            /* Pastikan padding dan border termasuk dalam lebar */
         }
 
         .print-container {
+            width: 49%;
+            /* Tetap 49% untuk dua kolom */
+            border: 1px solid #000;
+            box-sizing: border-box;
+            padding: 5mm 6mm;
+            /* Mengurangi padding internal */
+            margin: 0;
+            min-height: calc(210mm - 10mm);
+            /* Tinggi A4 - 2x margin halaman */
+            height: auto;
+            /* Biarkan tinggi menyesuaikan konten */
+            background: #fff;
             page-break-inside: avoid;
+            /* Hindari pemotongan kontainer di tengah halaman */
         }
-    }
 
-    body {
-        font-family: Arial, sans-serif;
-        font-size: 11px;
-        margin: 0;
-        padding: 0;
-        background: #fff;
-    }
+        .header-table {
+            width: 100%;
+            font-size: 10px;
+            /* Font lebih kecil */
+            margin-bottom: 4px;
+            /* Margin lebih kecil */
+        }
 
-    .wrapper {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: flex-start;
-        width: 100%;
-        gap: 10px;
-        margin: 0;
-        padding: 0;
-    }
+        .header-table td {
+            padding: 1px 3px;
+            /* Padding lebih kecil */
+        }
 
-    .print-container {
-        width: 49%;
-        border: 1px solid #000;
-        box-sizing: border-box;
-        padding: 8px 10px 6px 10px;
-        margin: 0;
-        min-height: 98%;
-        background: #fff;
-    }
+        .main-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 4px;
+            /* Margin lebih kecil */
+            font-size: 10px;
+            /* Font lebih kecil */
+        }
 
-    .header-table {
-        width: 100%;
-        font-size: 12px;
-        margin-bottom: 6px;
-    }
+        .main-table th,
+        .main-table td {
+            border: 1px solid #000;
+            padding: 2px 3px;
+            /* Padding lebih kecil */
+            text-align: left;
+        }
 
-    .header-table td {
-        padding: 2px 4px;
-        border: none;
-    }
+        .main-table th {
+            background: #f3f3f3;
+            font-weight: bold;
+            text-align: center;
+        }
 
-    .main-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 6px;
-        font-size: 11px;
-    }
+        .main-table .ttd {
+            text-align: center;
+            vertical-align: top;
+            padding-top: 5px;
+            /* Padding lebih kecil */
+            position: relative;
+            /* Untuk posisi gambar stempel */
+        }
 
-    .main-table th,
-    .main-table td {
-        border: 1px solid #000;
-        padding: 3px 4px;
-        text-align: left;
-    }
+        .main-table .ttd img {
+            max-width: 50px;
+            /* Ukuran stempel lebih kecil */
+            margin-bottom: 2px;
+            /* Margin lebih kecil */
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            top: 10px;
+            /* Sesuaikan posisi vertikal stempel */
+            opacity: 0.7;
+            /* Membuat stempel sedikit transparan */
+        }
 
-    .main-table th {
-        background: #f3f3f3;
-        font-weight: bold;
-        text-align: center;
-    }
+        .main-table .ttd .nama {
+            font-weight: bold;
+            font-size: 0.9em;
+            /* Font lebih kecil */
+            margin-top: 50px;
+            /* Sesuaikan dengan tinggi gambar stempel */
+        }
 
-    .main-table .ttd {
-        text-align: center;
-        vertical-align: top;
-        padding-top: 25px;
-    }
 
-    .main-table .ttd img {
-        max-width: 80px;
-        margin-bottom: 3px;
-    }
+        .main-table .sub {
+            font-size: 0.8em;
+            /* Font lebih kecil */
+            font-style: italic;
+        }
 
-    .main-table .ttd .nama {
-        font-weight: bold;
-        font-size: 1em;
-    }
+        .section-title {
+            text-align: center;
+            font-weight: bold;
+            margin: 4px 0 3px 0;
+            /* Margin lebih kecil */
+            font-size: 11px;
+            /* Font lebih kecil */
+        }
 
-    .main-table .sub {
-        font-size: 0.9em;
-        font-style: italic;
-    }
+        .catatan {
+            font-size: 9px;
+            /* Font lebih kecil */
+            margin-top: 4px;
+            /* Margin lebih kecil */
+        }
 
-    .section-title {
-        text-align: center;
-        font-weight: bold;
-        margin: 6px 0 4px 0;
-        font-size: 12px;
-    }
+        .catatan ul {
+            margin: 0 0 0 10px;
+            /* Margin lebih kecil */
+            padding: 0;
+        }
 
-    .catatan {
-        font-size: 10px;
-        margin-top: 6px;
-    }
+        .catatan li {
+            margin-bottom: 1px;
+            /* Margin lebih kecil */
+        }
 
-    .catatan ul {
-        margin: 0 0 0 15px;
-        padding: 0;
-    }
+        .segel-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9px;
+            /* Font lebih kecil */
+            margin-top: -3px;
+            /* Sesuaikan jika ada spasi berlebih */
+        }
 
-    .catatan li {
-        margin-bottom: 2px;
-    }
-
-    .segel-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 10px;
-    }
-
-    .segel-table td {
-        border: none;
-        padding: 1px 2px;
+        .segel-table td {
+            border: none;
+            padding: 0.5px 1px;
+            /* Padding lebih kecil */
+        }
     }
     </style>
 </head>
