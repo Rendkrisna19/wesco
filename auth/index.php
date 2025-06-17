@@ -49,7 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                     // Redirect ke halaman tujuan setelah login berhasil
                     // Contoh: Mengarahkan ke '../AFRN/index.php'
-                    header("Location: ../wesco2/home/index.php");
+                    header("Location: ../wesco/home/index.php");
                     exit; // Sangat penting: hentikan eksekusi script setelah redirect
                 } else {
                     // Password salah

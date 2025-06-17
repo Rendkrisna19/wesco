@@ -1,0 +1,65 @@
+1. tangki delivery tidak perlu di tampilkan field tabel No tangki
+2. insert tngki no tangki ada huruf bisa input angka T bukan number only
+3. water contamination ga perlu di insert ngikuti di link asli ga perlu di insert (hapus filed water_contimantion_ter di tabel tangki)
+4. water contimanion hanya ada di bon di waktu 
+17. AFRN no bpp tidak sesuai dengan yg di inputkan
+5. Test Report Suffix hapus dibagian insert delivery hasil tes report no : R1-0449..... (ketik manual ga ada value)
+6. Temperature (°C) (gausa pakai simbol) Density (g/cm³)
+7. halaman bridger ( 24KL, hasil nya ribuan = 24000, input tetap 24KL )
+8. halaman bridger volume output KL 8KL = 1 Tera, 16KL = 2 Tera, dan seterusnya
+9. Halaman AFRN bagian NO AFRN ngkut contoh di web tnggal pembuatan dan setelah reset 1 bulan balik ke nomor 1 lagi
+10. halaman afrn, dibuat oleh sesuai nama username yg login. 
+11. BON no AFRN sama value nya seperti no di tabel afrn ulangi ketika reset bulan dari no1
+12. BON field jumlah gausa pakai tanda ./, biasa saja
+13. di fom water_contamination_ter muncul otomatis setelah mengisi selesai pengisian 20 menit, dan keluar DDPU juga muncul setelah 20 menit dari water_contamination_ter
+14. INSERT SALIB UKUR berhubungan dengan KL apabila KL 3 maka yg muncul sampai mainhole 3 saja mainhole 4 N/A hasilnya. lalu mainhole 1,2,3,4 +1 contoh 0023,0024,0025,0026, otomatis 
+15. Bottom Loader Cover dimulai dari Bottom Loader cover saja,lalu 1, 2,3,4
+16. INSERT SALIB form jam keluar jangan ada 00 di akhirnya
+17. Cetak report Trip no. itu isinya RIT di afrn
+18.Installation :SHAFTH typo tambahkan i SHAFTHI
+19. LOCATION
+:
+SOEKARNO-HATTA AVIATION FUEL TERMINAL & HYDRANT
+Vehicle Type
+:
+BRIDGER
+Vehicle No.
+:
+B 9706 UEM
+Trip No.
+:
+AFRN-1748613945
+Destination
+:
+COBA TES hanya location yg bold textnya
+20. Tank Number judul tabel kiri bukan tengah
+21. Filling Commenced di bon tabel ini Mulai Pengisian:
+22. Filling Completed di bon tabel Selesai Pengisian:
+23. Meter Totalizer After Filling di bon meter awal
+24. Meter Totalizer Before Filling di bon meter akhirnya
+25. Quantity di bon Jumlah Pengisian:
+26. Left Installation di bon KELUAR DI DPPU
+27. di atas logo pertamina ad ada text NO AFRN
+28. STEMPEL C4 KOSONG tambahkan text  dibawah nya sesuai webiste
+29. nama yg di bawah tanda tangan user loign logo pertamina paling bawah hapus tambahkan nama tanda tangan nama user login
+30. DI KANAN KERTAS ADA TEXT SF-117/2012 - AVS Rev0 sesuai di foto 
+31. DENSITY OBSD REVISI DENSITY OBS`D
+32. slidebar biru sesuai halaman
+33. insert driver gaperlu masukin id_bridger
+34. tambahkan allert semuanya
+35. cetak salib 
+MAINHOLE 1 SKH-000023 (kalau tera kosong N/A sesuaikan dengan TERA)
+MAINHOLE 2 SKH-000023
+MAINHOLE 3 SKH-000023
+MAINHOLE 4 SKH-000023
+BOTTOM LOAD COVER  SKH-000023 (dimulai dari )
+BOTTOM LOAD COVER 1 SKH-000023
+BOTTOM LOAD COVER 2 SKH-000023
+BOTTOM LOAD COVER 3 SKH-000023
+BOTTOM LOAD COVER 4 SKH-000023
+
+36. footer static tidak bergerak
+
+
+
+

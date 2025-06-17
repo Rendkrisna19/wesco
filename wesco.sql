@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 08, 2025 at 01:49 PM
+-- Generation Time: Jun 16, 2025 at 04:21 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -172,7 +172,8 @@ INSERT INTO `destinasi` (`id_destinasi`, `nama_destinasi`, `alamat_destinasi`) V
 (5, 'COBA RENDY', 'COBA RENDY'),
 (6, 'PT INALUM', 'PT INAMUN'),
 (7, 'COBA LAS', 'COBA LASH'),
-(8, 'PT MULTIMAS', 'kuala tanjung');
+(8, 'PT MULTIMAS', 'kuala tanjung'),
+(9, 'WILMAR NABATI', 'KUALA TANJUNG\r\n');
 
 -- --------------------------------------------------------
 
@@ -528,9 +529,8 @@ INSERT INTO `user` (`id_user`, `nama_lengkap`, `alamat`, `tempat_lahir`, `tangga
 (6, 'a', 'a', 'a', '2024-09-10', 'b', '5f4dcc3b5aa765d61d8327deb882cf99', 1, NULL, NULL),
 (7, 'v', 'v', 'v', '2024-09-15', 'v', '5f4dcc3b5aa765d61d8327deb882cf99', 1, NULL, NULL),
 (8, 'Rendy Krisna', 'kuala tanjung', 'kuala tanjung', '2025-05-23', 'rendy2005', '25d55ad283aa400af464c76d713c07ad', 1, NULL, NULL),
-(10, 'Muhammad Rendy Krisna', 'jasadn', 'kuala tanjung', '2025-06-06', 'rendy123', '$2y$10$b6MhLcY63FTyefOtYT5X9.MCh9yH4KYXvJk2kSjhDFlXUGtHgAYGW', 2, '', ''),
-(11, 'Muhammad Rendy Krisna', 'pembangunan', 'kuala tanjung', '2025-06-06', 'Rendytes', '$2y$10$sXiBtLpUxUMncaf73c2lXOcZsWQFJ7.9PAWJo.mFqwpTQpE8eMj8y', 2, '', ''),
-(12, 'hpurba', 'kualla', 'kuala tanjung', '2025-06-07', 'hpurba', '$2y$10$AimizqaXaltXGj4nS/XYVuHpJmGySISleK0VRUnB0JiWLegFOAX1C', 2, '', '');
+(10, 'Muhammad Rendy Krisna', 'jasadn', 'kuala tanjung', '2025-06-06', 'hrpurba', '$2y$10$b6MhLcY63FTyefOtYT5X9.MCh9yH4KYXvJk2kSjhDFlXUGtHgAYGW', 2, '', ''),
+(11, 'Muhammad Rendy Krisna', 'pembangunan', 'kuala tanjung', '2025-06-06', 'Rendytes', '$2y$10$sXiBtLpUxUMncaf73c2lXOcZsWQFJ7.9PAWJo.mFqwpTQpE8eMj8y', 2, '', '');
 
 -- --------------------------------------------------------
 
@@ -697,7 +697,7 @@ ALTER TABLE `bridger`
 -- AUTO_INCREMENT for table `destinasi`
 --
 ALTER TABLE `destinasi`
-  MODIFY `id_destinasi` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id_destinasi` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `driver`
