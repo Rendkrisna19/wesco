@@ -61,10 +61,22 @@ $offset = ($page - 1) * $limit;
             <div class="bg-white shadow p-6 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-cyan-700">Selamat Datang di Wesco,
                     <?= htmlspecialchars($nama_lengkap) ?>!</h1>
-                <div class="flex items-center space-x-3">
-                    <span class="text-gray-600"><?= htmlspecialchars($nama_lengkap) ?></span>
-                    <img src="https://media.istockphoto.com/id/1300845620/id/vektor/ikon-pengguna-datar-terisolasi-pada-latar-belakang-putih-simbol-pengguna-ilustrasi-vektor.jpg?s=612x612&w=0&k=20&c=QN0LOsRwA1dHZz9lsKavYdSqUUnis3__FQLtZTQ--Ro="
-                        alt="User" class="w-8 h-8 rounded-full">
+                <div class="relative group">
+                    <div class="flex items-center space-x-3 cursor-pointer">
+                        <span class="text-gray-600"><?= htmlspecialchars($nama_lengkap) ?></span>
+                        <img src="https://media.istockphoto.com/id/1300845620/id/vektor/ikon-pengguna-datar-terisolasi-pada-latar-belakang-putih-simbol-pengguna-ilustrasi-vektor.jpg?s=612x612&w=0&k=20&c=QN0LOsRwA1dHZz9lsKavYdSqUUnis3__FQLtZTQ--Ro="
+                            alt="User" class="w-8 h-8 rounded-full">
+                    </div>
+
+                    <div
+                        class="absolute hidden group-hover:block right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10 ring-1 ring-black ring-opacity-5">
+                        <div class="py-1">
+                            <a href="../auth/index.php"
+                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-cyan-700 hover:text-white">
+                                Logout
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
             <!-- Page Content -->
@@ -90,10 +102,19 @@ $offset = ($page - 1) * $limit;
                         </thead>
                         <tbody>
                             <?php
-                            $no = $offset + 1; // nomor urut sesuai halaman
+                            $no = $offset + 1;
 
+                            // --- MODIFIKASI DIMULAI DI SINI ---
+                            
+                            // 1. Buat array helper untuk mengubah bulan menjadi angka Romawi
+                            $romanMonths = [
+                                1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI',
+                                7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'
+                            ];
+
+                            // Query tetap mengambil data yang diperlukan termasuk id_afrn dan tgl_afrn
                             $query = "SELECT 
-                                a.id_afrn, a.no_afrn, a.tgl_afrn, a.no_bpp, 
+                                a.id_afrn, a.tgl_afrn, a.no_bpp, 
                                 b.nama_trans, 
                                 br.no_polisi, br.volume 
                             FROM afrn a
@@ -106,13 +127,32 @@ $offset = ($page - 1) * $limit;
 
                             if(mysqli_num_rows($result) > 0){
                                 while ($row = mysqli_fetch_assoc($result)) {
+                                    
+                                    // 2. Ambil data yang dibutuhkan dari baris saat ini
+                                    $id_afrn = $row['id_afrn'];
+                                    $tgl_afrn = $row['tgl_afrn'];
+
+                                    // 3. Proses tanggal untuk mendapatkan bulan dan tahun
+                                    $timestamp = strtotime($tgl_afrn);
+                                    $month_num = date('n', $timestamp);
+                                    $year = date('Y', $timestamp);
+                                    
+                                    // 4. Ubah bulan angka menjadi Romawi
+                                    $month_roman = $romanMonths[$month_num] ?? '?';
+
+                                    // 5. Gabungkan menjadi format yang diinginkan
+                                    $formatted_no_afrn = "{$id_afrn}/AFRN/{$month_roman}/{$year}";
+
+                                    // 6. Tampilkan di dalam tabel
                                     echo "<tr class='border-t text-center'>";
                                     echo "<td class='px-4 py-2'>{$no}</td>";
                                     echo "<td class='px-4 py-2'>" . htmlspecialchars($row['no_bpp']) . "</td>";
-                                    echo "<td class='px-4 py-2'>" . htmlspecialchars($row['no_afrn']) . "</td>";
+                                    // Tampilkan No AFRN yang sudah diformat secara dinamis
+                                    echo "<td class='px-4 py-2'>" . htmlspecialchars($formatted_no_afrn) . "</td>";
                                     echo "<td class='px-4 py-2'>" . htmlspecialchars($row['tgl_afrn']) . "</td>";
                                     echo "<td class='px-4 py-2'>" . htmlspecialchars($row['nama_trans']) . "</td>";
                                     echo "<td class='px-4 py-2'>" . htmlspecialchars($row['no_polisi']) . "</td>";
+                                    // Tampilkan volume sesuai data asli di database
                                     echo "<td class='px-4 py-2'>" . htmlspecialchars($row['volume']) . "</td>";
                                     echo "</tr>";
                                     $no++;
@@ -120,6 +160,8 @@ $offset = ($page - 1) * $limit;
                             } else {
                                 echo "<tr><td colspan='7' class='py-4 text-center'>Data tidak ditemukan</td></tr>";
                             }
+
+                            // --- MODIFIKASI SELESAI DI SINI ---
                             ?>
                         </tbody>
                     </table>
@@ -162,10 +204,7 @@ $offset = ($page - 1) * $limit;
                 </div>
             </div>
 
-            <!-- Footer -->
-            <footer class="text-center py-4 text-sm text-gray-500 mt-auto">
-                Copyright © Your Website 2024
-            </footer>
+            <?php include_once '../components/footer.php'; ?>
         </div>
     </div>
 </body>

@@ -1,6 +1,8 @@
 <?php
 include '../config/koneksi.php'; // Pastikan file ini mendefinisikan $conn
 
+
+
 // Ambil no_afrn dari parameter GET
 $no_afrn = isset($_GET['no_afrn']) ? $conn->real_escape_string($_GET['no_afrn']) : '';
 
@@ -10,7 +12,7 @@ if (empty($no_afrn)) {
 }
 
 $query = "SELECT
-    a.id_afrn, a.no_afrn, a.tgl_afrn, a.no_bpp, a.id_transportir, a.id_destinasi, a.id_tangki,
+    a.id_afrn, a.no_afrn, a.tgl_afrn, a.no_bpp, a.id_transportir, a.id_destinasi, a.id_tangki,a.rit,
     a.dibuat, a.diperiksa, a.disetujui,
     b.nama_trans, b.alamat_trans,
     d.nama_destinasi, d.alamat_destinasi,
@@ -18,7 +20,7 @@ $query = "SELECT
     t.test_report_no, t.test_report_let, t.test_report_date,
     t.density, t.temperature, t.cu, t.water_contamination_ter,
     br.no_polisi, br.tgl_serti_akhir, br.volume,
-    bo.keluar_dppu, bo.mulai_pengisian, bo.selesai_pengisian, bo.water_cont_ter, bo.total_meter_akhir, bo.meter_awal,
+    bo.keluar_dppu, bo.mulai_pengisian, bo.selesai_pengisian, bo.water_cont_ter, bo.total_meter_akhir, bo.meter_awal, bo.jlh_pengisian,
     c.id_driver, c.nama_driver
 FROM afrn a
 JOIN BRIDGER br ON a.id_bridger = br.id_bridger
@@ -49,6 +51,9 @@ function formatDate($date) {
     return date('d F Y', strtotime($date));
 }
 
+
+
+
 // Fungsi untuk render satu dokumen AFRN
 function render_afrn($data) {
 ?>
@@ -59,63 +64,67 @@ function render_afrn($data) {
             <h2 class="text-xs-force leading-tight font-normal">NOTE</h2>
             <h3 class="text-xs-force leading-tight font-normal">(AFRN)</h3>
         </div>
-        <div class="logo-block">
+        <div class="logo-block flex flex-col items-center">
+            <span class="font-semibold text-sm mb-1">
+                <?php echo htmlspecialchars($data['no_afrn'] ?? '-'); ?>
+            </span>
+
             <img src="../image/pertamina.jpg" alt="Pertamina Logo" class="h-auto w-12">
         </div>
     </div>
 
-    <div class="info-section border-b border-black">
+    <div class="info-section ">
         <div class="grid grid-cols-2 gap-x-2 text-xxs-force">
             <div class="space-y-0.5">
                 <div class="flex">
-                    <span class="font-semibold w-16">LOCATION</span>
+                    <span class="font-bold w-16">LOCATION</span>
                     <span class="mr-1">:</span>
                     <span class="">SOEKARNO-HATTA AVIATION FUEL TERMINAL & HYDRANT</span>
                 </div>
                 <div class="flex">
-                    <span class="font-semibold w-16">Vehicle Type</span>
+                    <span class="font-normal w-16">Vehicle Type</span>
                     <span class="mr-1">:</span>
                     <span class="">BRIDGER</span>
                 </div>
                 <div class="flex">
-                    <span class="font-semibold w-16">Vehicle No.</span>
+                    <span class="font-normal w-16">Vehicle No.</span>
                     <span class="mr-1">:</span>
                     <span class=""><?php echo htmlspecialchars($data['no_polisi'] ?? '-'); ?></span>
                 </div>
                 <div class="flex">
-                    <span class="font-semibold w-16">Trip No.</span>
+                    <span class="font-normal w-16">Trip No.</span>
                     <span class="mr-1">:</span>
-                    <span class=""><?php echo htmlspecialchars($data['no_afrn'] ?? '-'); ?></span>
+                    <span class=""><?php echo htmlspecialchars($data['rit'] ?? '-'); ?></span>
                 </div>
                 <div class="flex">
-                    <span class="font-semibold w-16">Destination</span>
+                    <span class="font-normal w-16">Destination</span>
                     <span class="mr-1">:</span>
                     <span class=""><?php echo htmlspecialchars($data['nama_destinasi'] ?? '-'); ?></span>
                 </div>
             </div>
             <div class="space-y-0.5">
                 <div class="flex">
-                    <span class="font-semibold w-16">Date</span>
+                    <span class="font-normal w-16">Date</span>
                     <span class="mr-1">:</span>
                     <span class=""><?php echo formatDate($data['tgl_afrn'] ?? ''); ?></span>
                 </div>
                 <div class="flex">
-                    <span class="font-semibold w-16">Installation</span>
+                    <span class="font-normal w-16">Installation</span>
                     <span class="mr-1">:</span>
-                    <span class="">SHAFTH</span>
+                    <span class="">SHAFTHI</span>
                 </div>
                 <div class="flex">
-                    <span class="font-semibold w-16">Driver</span>
+                    <span class="font-normal w-16">Driver</span>
                     <span class="mr-1">:</span>
-                    <span class=""><?php echo htmlspecialchars($data['nama_driver'] ?? '-'); ?></span>
+                    <span class=""><?php echo htmlspecialchars($data['nama_driver'] ?? ''); ?>Hermanto</span>
                 </div>
                 <div class="flex">
-                    <span class="font-semibold w-16">BPP/PNBP</span>
+                    <span class="font-normal w-16">BPP/PNBP</span>
                     <span class="mr-1">:</span>
                     <span class=""><?php echo htmlspecialchars($data['no_bpp'] ?? '-'); ?></span>
                 </div>
                 <div class="flex">
-                    <span class="font-semibold w-16">Transportir</span>
+                    <span class="font-normal w-16">Transportir</span>
                     <span class="mr-1">:</span>
                     <span class=""><?php echo htmlspecialchars($data['nama_trans'] ?? '-'); ?></span>
                 </div>
@@ -128,13 +137,14 @@ function render_afrn($data) {
             <table class="w-full border-collapse">
                 <thead>
                     <tr>
-                        <th class="table-header w-24">Tank Number</th>
-                        <th class="table-header w-16"><?php echo htmlspecialchars($data['no_tangki'] ?? '-'); ?></th>
+                        <th class="table-header text-left font-normal w-24">Tank Number</th>
+                        <th class="table-header text-center font-bold w-16">
+                            <?php echo htmlspecialchars($data['no_tangki'] ?? '-'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="table-cell">Filling Commenced</td>
+                        <td class="table-cell px-2 py-1">Filling Commenced</td>
                         <td class="table-cell"><?php echo htmlspecialchars($data['mulai_pengisian'] ?? ''); ?></td>
                     </tr>
                     <tr>
@@ -151,15 +161,16 @@ function render_afrn($data) {
                     </tr>
                     <tr>
                         <td class="table-cell">Meter Totalizer After Filling</td>
-                        <td class="table-cell"><?php echo number_format($data['total_meter_akhir'] ?? 0); ?></td>
-                    </tr>
-                    <tr>
-                        <td class="table-cell">Meter Totalizer Before Filling</td>
                         <td class="table-cell"><?php echo number_format($data['meter_awal'] ?? 0); ?></td>
                     </tr>
                     <tr>
+                        <td class="table-cell">Meter Totalizer Before Filling</td>
+                        <td class="table-cell"><?php echo number_format($data['total_meter_akhir'] ?? 0); ?></td>
+                    </tr>
+                    <tr>
                         <td class="table-cell">Quantity</td>
-                        <td class="table-cell"><?php echo number_format($data['volume'] ?? 0); ?></td>
+                        <td class="table-cell"><?php echo number_format($data['jlh_pengisian'] ?? 0); ?>&nbsp; LITERS
+                        </td>
                     </tr>
                     <tr>
                         <td class="table-cell">Batch Number</td>
@@ -186,27 +197,27 @@ function render_afrn($data) {
                     </tr>
                     <tr>
                         <td class="table-cell">Left Installation</td>
-                        <td class="table-cell"><?php echo htmlspecialchars($data['keluar_dppu'] ?? ''); ?></td>
+                        <td class="table-cell"><?php echo htmlspecialchars($data['keluar_dppu'] ?? ''); ?> Hrs.</td>
                     </tr>
                     <tr>
                         <td class="table-cell">Arrived at Depot</td>
-                        <td class="table-cell"></td>
+                        <td class="table-cell text-center">Hrs.</td>
                     </tr>
                     <tr>
                         <td class="table-cell">Water/Contamination Test</td>
-                        <td class="table-cell"></td>
+                        <td class="table-cell text-center">Hrs.</td>
                     </tr>
                     <tr>
                         <td class="table-cell">Discharge Commenced</td>
-                        <td class="table-cell"></td>
+                        <td class="table-cell text-center">Hrs.</td>
                     </tr>
                     <tr>
                         <td class="table-cell">Discharge Completed</td>
-                        <td class="table-cell"></td>
+                        <td class="table-cell text-center">Hrs.</td>
                     </tr>
                     <tr>
                         <td class="table-cell">Quantity Arrived</td>
-                        <td class="table-cell"></td>
+                        <td class="table-cell text-center">Liters</td>
                     </tr>
                     <tr>
                         <td class="table-cell">Quality Controller</td>
@@ -214,24 +225,22 @@ function render_afrn($data) {
                     </tr>
                     <tr>
                         <td class="table-cell">Left Depot</td>
-                        <td class="table-cell"></td>
+                        <td class="table-cell text-center">Hrs.</td>
                     </tr>
                     <tr>
-                        <td class="table-cell">Arrived at Installation/Depot</td>
+                        <td class="table-cell">Arrived at Installation/Depot Quality Controller</td>
                         <td class="table-cell"></td>
                     </tr>
-                    <tr>
-                        <td class="table-cell">Quality Controller</td>
-                        <td class="table-cell"></td>
-                    </tr>
+
                 </tbody>
             </table>
 
             <table class="w-full border-collapse mt-1">
                 <tbody>
                     <tr>
-                        <td class="table-cell align-top p-1">
-                            Receive Free From Water
+                        <td class="border border-black  p-2 flex flex-col justify-between h-28">
+                            <span>Receive Free From Water</span>
+                            <span>Quality Controller Sign & Mark</span>
                         </td>
                     </tr>
                 </tbody>
@@ -239,22 +248,31 @@ function render_afrn($data) {
         </div>
 
         <div class="right-column">
-            <div class="section-box text-xxs-force mb-1">
-                <h1 class="font-bold border-b border-black pb-0.5 mb-0.5">Vehicle Note</h1>
+            <div class=" text-xxs-force mb-1">
+                <h1 class="font-bold pb-0.5 mb-0.5">Vehicle Note</h1>
                 <div class="mb-0.5">
                     <span class="font-normal"> Type of Product Filling :</span>
                     <span class="ml-1">JET A-1</span>
                 </div>
-                <div class="mb-0.5">Date of Cleaning/Draining</div>
-                <div class="mb-0.5">Checked By Quality Controller</div>
-                <div class="">Instruction Number</div>
+                <div class="mb-0.5">Date of Cleaning/Draining :</div>
+                <div class="mb-0.5">Checked By Quality Controller :</div>
+                <div class="">Instruction Number :</div>
             </div>
 
-            <div class="section-box certified-box text-xxs-force text-center mb-1">
-                <div class="font-semibold mb-0.5">Certified Water Free By</div>
-                <div class="flex items-center justify-center">
-                    <img src="../image/image.png" alt="QC Stamp" class="h-auto w-16">
+            <div class="section-box certified-box w-42 border border-gray-400 p-3 text-center text-xs text-xxs-force">
+
+                <div class="font-semibold ">Certified Water free by</div>
+
+                <div class="h-20 my-2 flex items-center justify-center">
+
+                    <span class="font-normal  text-gray-300 ">
+                        for Deliver
+                    </span>
+
                 </div>
+
+                <div class="font-normal">Quality Controller Sign & Mark</div>
+
             </div>
 
             <div class="text-xxs-force mb-1 leading-tight">
@@ -273,20 +291,21 @@ function render_afrn($data) {
                     <span class="font-medium">BPP/PNP Num.</span>
                     <span><?php echo htmlspecialchars($data['no_bpp'] ?? '-'); ?></span>
                     <span class="font-medium">DENSITY OBSD</span>
-                    <span><?php echo htmlspecialchars($data['density'] ?? '-'); ?></span>
+                    <span><?php echo htmlspecialchars($data['density'] ?? '-'); ?>&nbsp; Kg/liter </span>
                     <span class="font-medium">TEMP OBSD</span>
-                    <span><?php echo htmlspecialchars($data['temperature'] ?? '-'); ?></span>
+                    <span><?php echo htmlspecialchars($data['temperature'] ?? '-'); ?>&nbsp; &deg;C</span>
                     <span class="font-medium">CU</span>
-                    <span><?php echo htmlspecialchars($data['cu'] ?? '-'); ?></span>
+                    <span><?php echo htmlspecialchars($data['cu'] ?? '-'); ?>&nbsp; p. S/m</span>
                 </div>
             </div>
-            <div class="section-box text-xxs-force text-center">
-                <div class="mb-0.5">Quality Control Sign</div>
-                <div class="flex items-center justify-center mb-0.5 ">
-                    <img src="../image/pertamina.jpg" alt="Pertamina Logo Small" class="h-auto w-16">
-                </div>
-                <div class="mb-0.5">J. Supervisor I Rev. Str. 4 Dist</div>
+            <div class="p-1 mb-1 w-42  text-center">
+                <div class="text-control p-8">Quality Control Sign</div>
+
                 <div class="text-xs-force font-semibold">HERMANTO PURBA</div>
+            </div>
+
+            <div class="absolute bottom-8 left-8 text-xs text-gray-500">
+                SF-117/2012 - AVS Rev.0
             </div>
         </div>
     </div>
@@ -315,9 +334,14 @@ function render_afrn($data) {
         /* Ensure text is black */
     }
 
+    .text-control {
+        font-size: 8px;
+        margin-bottom: 30px;
+    }
+
     /* Custom utility classes for very small fonts */
     .text-xxs-force {
-        font-size: 7.5px !important;
+        font-size: 10px !important;
         /* Extremely small font */
         line-height: 1 !important;
     }
@@ -364,7 +388,7 @@ function render_afrn($data) {
             height: 100%;
             /* Each copy takes full page height */
             box-sizing: border-box;
-            border: 0.25mm solid black;
+            /* border: 0.25mm solid black; */
             /* Thin border between copies */
             padding: 2mm;
             /* Minimal padding inside each copy */
@@ -410,7 +434,7 @@ function render_afrn($data) {
             padding: 0.5mm 0;
             /* Minimal padding */
             margin-bottom: 0.5mm;
-            border-bottom: 0.25mm solid black;
+
             /* Thin border */
         }
 
@@ -465,20 +489,29 @@ function render_afrn($data) {
 
         .table-header,
         .table-cell {
-            border: 0.25mm solid black;
-            /* Thin border */
+            /* Menggunakan warna abu-abu gelap (#333) agar tidak terlalu tajam saat dicetak */
+            border: 0.25mm solid #333;
+
+            /* Padding tetap sama, sudah cukup baik */
             padding: 0.5mm 1mm;
-            /* Minimal padding */
-            font-size: 7.5px;
-            /* Consistent small font */
-            line-height: 1.1;
+
+            /* Menggunakan 8pt (points), standar untuk cetak dan sedikit lebih mudah dibaca */
+            font-size: 8pt;
+
+            /* Memberi sedikit ruang napas antar baris agar tidak terlalu dempet */
+            line-height: 1.2;
+
+            /* vertical-align: top sudah sangat bagus untuk merapikan teks ke atas */
             vertical-align: top;
+
+            /* Menambahkan properti untuk menangani teks yang sangat panjang */
+            word-wrap: break-word;
         }
 
         .table-header {
-            font-weight: 600;
+
             background-color: #f5f5f5;
-            text-align: center;
+
         }
 
         .section-box {
@@ -509,6 +542,7 @@ function render_afrn($data) {
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            font-size: 5px;
         }
     }
     </style>

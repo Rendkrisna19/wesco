@@ -13,7 +13,7 @@ $nama_lengkap = isset($_SESSION['nama_lengkap']) ? $_SESSION['nama_lengkap'] : $
 include '../config/koneksi.php';
 
 // --- Pagination Settings ---
-$limit = 10; // Jumlah record per halaman
+$limit = 10;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $limit;
 
@@ -32,13 +32,14 @@ $total_pages = ceil($total_records / $limit);
 // --- End Pagination Settings ---
 
 
-// --- Main Query with LIMIT and OFFSET ---
+// --- MODIFIKASI QUERY UTAMA ---
+// Menambahkan afrn.id_afrn dan afrn.tgl_afrn untuk kebutuhan formatting
 $main_query = "SELECT
-                bon.id_bon, bon.tgl_rekam, bon.jlh_pengisian,
-                afrn.no_afrn, bridger.no_polisi
-              FROM bon
-              LEFT JOIN afrn ON bon.no_afrn = afrn.no_afrn
-              LEFT JOIN bridger ON afrn.id_bridger = bridger.id_bridger";
+                    bon.id_bon, bon.tgl_rekam, bon.jlh_pengisian,
+                    afrn.id_afrn, afrn.tgl_afrn, bridger.no_polisi
+                FROM bon
+                LEFT JOIN afrn ON bon.no_afrn = afrn.no_afrn
+                LEFT JOIN bridger ON afrn.id_bridger = bridger.id_bridger";
 
 if (!empty($_GET['idBon'])) {
     $idBonFilter = intval($_GET['idBon']);
@@ -78,10 +79,22 @@ if (!$result) {
             <div class="bg-white shadow p-6 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-cyan-700">Selamat Datang di Wesco,
                     <?= htmlspecialchars($nama_lengkap) ?>!</h1>
-                <div class="flex items-center space-x-3">
-                    <span class="text-gray-600"><?= htmlspecialchars($nama_lengkap) ?></span>
-                    <img src="https://media.istockphoto.com/id/1300845620/id/vektor/ikon-pengguna-datar-terisolasi-pada-latar-belakang-putih-simbol-pengguna-ilustrasi-vektor.jpg?s=612x612&w=0&k=20&c=QN0LOsRwA1dHZz9lsKavYdSqUUnis3__FQLtZTQ--Ro="
-                        alt="User" class="w-8 h-8 rounded-full">
+                <div class="relative group">
+                    <div class="flex items-center space-x-3 cursor-pointer">
+                        <span class="text-gray-600"><?= htmlspecialchars($nama_lengkap) ?></span>
+                        <img src="https://media.istockphoto.com/id/1300845620/id/vektor/ikon-pengguna-datar-terisolasi-pada-latar-belakang-putih-simbol-pengguna-ilustrasi-vektor.jpg?s=612x612&w=0&k=20&c=QN0LOsRwA1dHZz9lsKavYdSqUUnis3__FQLtZTQ--Ro="
+                            alt="User" class="w-8 h-8 rounded-full">
+                    </div>
+
+                    <div
+                        class="absolute hidden group-hover:block right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10 ring-1 ring-black ring-opacity-5">
+                        <div class="py-1">
+                            <a href="../auth/index.php"
+                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-cyan-700 hover:text-white">
+                                Logout
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -108,17 +121,40 @@ if (!$result) {
                         </thead>
                         <tbody class="text-gray-700">
                             <?php
-                            $no = $offset + 1; // Start numbering from the correct offset
+                            // --- MODIFIKASI LOGIKA TAMPILAN ---
+
+                            // 1. Buat array helper untuk bulan Romawi
+                            $romanMonths = [
+                                1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI',
+                                7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'
+                            ];
+
+                            $no = $offset + 1;
                             if (mysqli_num_rows($result) > 0) {
                                 while ($row = mysqli_fetch_assoc($result)) {
+                                    
+                                    // 2. Format No AFRN secara dinamis
+                                    $formatted_no_afrn = '-'; // Default jika tidak ada AFRN
+                                    if (!empty($row['id_afrn']) && !empty($row['tgl_afrn'])) {
+                                        $id_afrn = $row['id_afrn'];
+                                        $tgl_afrn = $row['tgl_afrn'];
+
+                                        $timestamp = strtotime($tgl_afrn);
+                                        $month_num = date('n', $timestamp);
+                                        $year = date('Y', $timestamp);
+                                        $month_roman = $romanMonths[$month_num] ?? '?';
+
+                                        $formatted_no_afrn = "{$id_afrn}/AFRN/{$month_roman}/{$year}";
+                                    }
+
                                     $no_polisi = !empty($row['no_polisi']) ? htmlspecialchars($row['no_polisi']) : '-';
                             ?>
                             <tr class="border-b hover:bg-gray-50">
                                 <td class="px-4 py-2"><?= $no++ ?></td>
-                                <td class="px-4 py-2"><?= htmlspecialchars($row['no_afrn']) ?></td>
+                                <td class="px-4 py-2"><?= htmlspecialchars($formatted_no_afrn) ?></td>
                                 <td class="px-4 py-2"><?= htmlspecialchars($row['tgl_rekam']) ?></td>
                                 <td class="px-4 py-2"><?= $no_polisi ?></td>
-                                <td class="px-4 py-2"><?= number_format($row['jlh_pengisian'], 0, ',', '.') ?></td>
+                                <td class="px-4 py-2"><?= htmlspecialchars($row['jlh_pengisian']) ?></td>
                                 <td class="px-4 py-2">
                                     <a href="edit_bon.php?idBon=<?= $row['id_bon'] ?>"
                                         class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-1 border border-black hover:border-transparent rounded-full transition">
@@ -148,11 +184,9 @@ if (!$result) {
                             <?php } ?>
 
                             <?php
-                            // Tentukan rentang nomor halaman yang akan ditampilkan (misal: 2 halaman di kiri dan 2 di kanan dari halaman aktif)
                             $start_page = max(1, $page - 2);
                             $end_page = min($total_pages, $page + 2);
 
-                            // Jika halaman awal terlalu jauh dari 1, tampilkan "..."
                             if ($start_page > 1) {
                                 echo '<a href="?page=1'. (!empty($_GET['idBon']) ? '&idBon=' . htmlspecialchars($_GET['idBon']) : '') . '" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-blue-700 hover:bg-gray-50">1</a>';
                                 if ($start_page > 2) {
@@ -170,7 +204,6 @@ if (!$result) {
                             <?php } ?>
 
                             <?php
-                            // Jika halaman akhir terlalu jauh dari total_pages, tampilkan "..."
                             if ($end_page < $total_pages) {
                                 if ($end_page < $total_pages - 1) {
                                     echo '<span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>';
@@ -191,7 +224,11 @@ if (!$result) {
                 </div>
             </div>
         </div>
+
     </div>
+    <?php include_once '../components/footer.php'; ?>
+
+
 </body>
 
 </html>

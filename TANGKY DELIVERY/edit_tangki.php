@@ -104,10 +104,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="bg-white shadow p-6 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-cyan-700">Selamat Datang di Wesco,
                     <?= htmlspecialchars($nama_lengkap) ?>!</h1>
-                <div class="flex items-center space-x-3">
-                    <span class="text-gray-600"><?= htmlspecialchars($nama_lengkap) ?></span>
-                    <img src="https://media.istockphoto.com/id/1300845620/id/vektor/ikon-pengguna-datar-terisolasi-pada-latar-belakang-putih-simbol-pengguna-ilustrasi-vektor.jpg?s=612x612&w=0&k=20&c=QN0LOsRwA1dHZz9lsKavYdSqUUnis3__FQLtZTQ--Ro="
-                        alt="User" class="w-8 h-8 rounded-full">
+                <div class="relative group">
+                    <div class="flex items-center space-x-3 cursor-pointer">
+                        <span class="text-gray-600"><?= htmlspecialchars($nama_lengkap) ?></span>
+                        <img src="https://media.istockphoto.com/id/1300845620/id/vektor/ikon-pengguna-datar-terisolasi-pada-latar-belakang-putih-simbol-pengguna-ilustrasi-vektor.jpg?s=612x612&w=0&k=20&c=QN0LOsRwA1dHZz9lsKavYdSqUUnis3__FQLtZTQ--Ro="
+                            alt="User" class="w-8 h-8 rounded-full">
+                    </div>
+
+                    <div
+                        class="absolute hidden group-hover:block right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10 ring-1 ring-black ring-opacity-5">
+                        <div class="py-1">
+                            <a href="../auth/index.php"
+                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-cyan-700 hover:text-white">
+                                Logout
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
             <!-- Main content -->
@@ -146,10 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 value="<?= htmlspecialchars($data['test_report_no']) ?>"
                                 class="w-full border border-gray-300 p-2 rounded-md">
 
-                            <label class="block text-gray-700 font-semibold">Test Report Suffix</label>
-                            <input type="text" name="test_report_suffix"
-                                value="<?= htmlspecialchars($data['test_report_let']) ?>"
-                                class="w-full border border-gray-300 p-2 rounded-md">
+
 
                             <label class="block text-gray-700 font-semibold">Tanggal Test Report</label>
                             <input type="date" name="test_report_date"
@@ -170,10 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <input type="text" name="cu" value="<?= htmlspecialchars($data['cu']) ?>"
                                 class="w-full border border-gray-300 p-2 rounded-md">
 
-                            <label class="block text-gray-700 font-semibold">Water Contamination</label>
-                            <input type="text" name="water_contamination"
-                                value="<?= htmlspecialchars($data['water_contamination_ter']) ?>"
-                                class="w-full border border-gray-300 p-2 rounded-md">
+
 
                             <label class="block text-gray-700 font-semibold">Upload Dokumen Baru (Opsional)</label>
                             <input type="file" name="doc_file"
@@ -196,6 +202,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </form>
                 </div>
             </div>
+            <?php include_once '../components/footer.php'; ?>
+
         </div>
 </body>
 

@@ -22,12 +22,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $no_batch = $_POST['no_batch'];
     $source = $_POST['source'];
     $test_report_no = $_POST['test_report_no'];
-    $test_report_suffix = $_POST['test_report_suffix'];
+    // $test_report_suffix = $_POST['test_report_suffix'];
     $test_report_date = $_POST['test_report_date'];
     $temperature = $_POST['temperature'];
     $density = $_POST['density'];
     $cu = $_POST['cu'];
-    $water_contamination = $_POST['water_contamination'];
+    // $water_contamination = $_POST['water_contamination'];
 
     // Upload file
     $upload_dir = 'uploads/';
@@ -55,8 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($errors)) {
         // Prepare statement for security (prevents SQL injection)
-        $stmt = $conn->prepare("INSERT INTO tangki (no_tangki, no_bacth, source, doc_url, test_report_no, test_report_let, test_report_date, density, temperature, cu, water_contamination_ter) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssssssssss", $no_tangki, $no_batch, $source, $doc_url, $test_report_no, $test_report_suffix, $test_report_date, $density, $temperature, $cu, $water_contamination);
+        $stmt = $conn->prepare("INSERT INTO tangki (no_tangki, no_bacth, source, doc_url, test_report_no, test_report_let, test_report_date, density, temperature, cu ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ? )");
+        $stmt->bind_param("ssssssssss", $no_tangki, $no_batch, $source, $doc_url, $test_report_no, $test_report_suffix, $test_report_date, $density, $temperature, $cu);
 
         if ($stmt->execute()) {
             $success_message = "Data tangki berhasil disimpan!";
@@ -129,10 +129,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="bg-white shadow-md p-6 flex justify-between items-center border-b border-gray-200">
                 <h1 class="text-2xl font-bold text-cyan-700">Selamat Datang di Wesco,
                     <?= htmlspecialchars($nama_lengkap) ?>!</h1>
-                <div class="flex items-center space-x-3">
-                    <span class="text-gray-700 font-medium"><?= htmlspecialchars($nama_lengkap) ?></span>
-                    <img src="https://media.istockphoto.com/id/1300845620/id/vektor/ikon-pengguna-datar-terisolasi-pada-latar-belakang-putih-simbol-pengguna-ilustrasi-vektor.jpg?s=612x612&w=0&k=20&c=QN0LOsRwA1dHZz9lsKavYdSqUUnis3__FQLtZTQ--Ro="
-                        alt="User" class="w-10 h-10 rounded-full border-2 border-cyan-500 p-0.5">
+                <div class="relative group">
+                    <div class="flex items-center space-x-3 cursor-pointer">
+                        <span class="text-gray-600"><?= htmlspecialchars($nama_lengkap) ?></span>
+                        <img src="https://media.istockphoto.com/id/1300845620/id/vektor/ikon-pengguna-datar-terisolasi-pada-latar-belakang-putih-simbol-pengguna-ilustrasi-vektor.jpg?s=612x612&w=0&k=20&c=QN0LOsRwA1dHZz9lsKavYdSqUUnis3__FQLtZTQ--Ro="
+                            alt="User" class="w-8 h-8 rounded-full">
+                    </div>
+
+                    <div
+                        class="absolute hidden group-hover:block right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10 ring-1 ring-black ring-opacity-5">
+                        <div class="py-1">
+                            <a href="../auth/index.php"
+                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-cyan-700 hover:text-white">
+                                Logout
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -176,11 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <input type="text" id="test_report_no" name="test_report_no" class="form-input"
                                 placeholder="Masukkan Nomor Test Report" required />
                         </div>
-                        <div>
-                            <label for="test_report_suffix" class="form-label">Test Report Suffix</label>
-                            <input type="text" id="test_report_suffix" name="test_report_suffix" value="PL0000"
-                                class="form-input" placeholder="Contoh: PL0000" />
-                        </div>
+
                         <div>
                             <label for="test_report_date" class="form-label">Tanggal Test Report <span
                                     class="text-red-500">*</span></label>
@@ -191,12 +199,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="space-y-6">
                         <div>
-                            <label for="temperature" class="form-label">Temperature (°C)</label>
+                            <label for="temperature" class="form-label">Temperature</label>
                             <input type="text" id="temperature" name="temperature" class="form-input"
                                 placeholder="Masukkan Suhu" />
                         </div>
                         <div>
-                            <label for="density" class="form-label">Density (g/cm³)</label>
+                            <label for="density" class="form-label">Density</label>
                             <input type="text" id="density" name="density" class="form-input"
                                 placeholder="Masukkan Kepadatan" />
                         </div>
@@ -204,15 +212,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <label for="cu" class="form-label">CU</label>
                             <input type="text" id="cu" name="cu" class="form-input" placeholder="Masukkan nilai CU" />
                         </div>
-                        <div>
+                        <!-- <div>
                             <label for="water_contamination" class="form-label">Water Contamination (%)</label>
                             <input type="text" id="water_contamination" name="water_contamination" class="form-input"
                                 placeholder="Masukkan Kontaminasi Air" />
-                        </div>
+                        </div> -->
                         <div>
-                            <label for="doc_file" class="form-label">Upload Dokumen (PDF/Gambar)</label>
+                            <label for="doc_file" class="form-label">Upload Dokumen </label>
                             <input type="file" id="doc_file" name="doc_file" class="form-input py-1.5" />
-                            <p class="text-sm text-gray-500 mt-1">Format: PDF, JPG, JPEG, PNG. Max file size: 5MB.</p>
+                            <p class="text-sm text-gray-500 mt-1">Pilih File PDF atau Gambar:</p>
                         </div>
                     </div>
 
@@ -228,6 +236,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </form>
             </section>
+            <?php include_once '../components/footer.php'; ?>
+
         </main>
     </section>
 

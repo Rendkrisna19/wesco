@@ -51,10 +51,22 @@ include('ajax_salibukur.php');
             <div class="bg-white shadow p-6 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-cyan-700">Selamat Datang di Wesco,
                     <?= htmlspecialchars($nama_lengkap) ?>!</h1>
-                <div class="flex items-center space-x-3">
-                    <span class="text-gray-600"><?= htmlspecialchars($nama_lengkap) ?></span>
-                    <img src="https://media.istockphoto.com/id/1300845620/id/vektor/ikon-pengguna-datar-terisolasi-pada-latar-belakang-putih-simbol-pengguna-ilustrasi-vektor.jpg?s=612x612&w=0&k=20&c=QN0LOsRwA1dHZz9lsKavYdSqUUnis3__FQLtZTQ--Ro="
-                        alt="User" class="w-8 h-8 rounded-full">
+                <div class="relative group">
+                    <div class="flex items-center space-x-3 cursor-pointer">
+                        <span class="text-gray-600"><?= htmlspecialchars($nama_lengkap) ?></span>
+                        <img src="https://media.istockphoto.com/id/1300845620/id/vektor/ikon-pengguna-datar-terisolasi-pada-latar-belakang-putih-simbol-pengguna-ilustrasi-vektor.jpg?s=612x612&w=0&k=20&c=QN0LOsRwA1dHZz9lsKavYdSqUUnis3__FQLtZTQ--Ro="
+                            alt="User" class="w-8 h-8 rounded-full">
+                    </div>
+
+                    <div
+                        class="absolute hidden group-hover:block right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10 ring-1 ring-black ring-opacity-5">
+                        <div class="py-1">
+                            <a href="../auth/index.php"
+                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-cyan-700 hover:text-white">
+                                Logout
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="max-w-7xl mx-auto bg-white rounded-lg shadow-lg">
@@ -344,7 +356,7 @@ include('ajax_salibukur.php');
                         </div>
                         <div>
                             <label class="text-sm font-normal block mb-1">Mainhole 3</label>
-                            <input type="text"" class=" w-full border rounded px-3 py-2 text-sm" name="mainhole3"
+                            <input type="text" class=" w-full border rounded px-3 py-2 text-sm" name="mainhole3"
                                 id="mainhole3" value="SKH-000023">
                         </div>
                         <div>
@@ -354,27 +366,27 @@ include('ajax_salibukur.php');
                         </div>
 
                         <div>
-                            <label class="text-sm font-normal block mb-1">Bottom Loader Cover 1</label>
+                            <label class="text-sm font-normal block mb-1">Bottom Loader Cover </label>
                             <input type="text" class="w-full border rounded px-3 py-2 text-sm" name="bottom_load_cov1"
                                 id="bottom_load_cov1" value="SKH-000023">
                         </div>
                         <div>
-                            <label class="text-sm font-normal block mb-1">Bottom Loader Cover 2</label>
+                            <label class="text-sm font-normal block mb-1">Bottom Loader Cover 1</label>
                             <input type="text" class="w-full border rounded px-3 py-2 text-sm" name="bottom_load_cov2"
                                 id="bottom_load_cov2" value="SKH-000023">
                         </div>
                         <div>
-                            <label class="text-sm font-normal block mb-1">Bottom Loader Cover 3</label>
+                            <label class="text-sm font-normal block mb-1">Bottom Loader Cover 2</label>
                             <input type="text" class="w-full border rounded px-3 py-2 text-sm" name="bottom_load_cov3"
                                 id="bottom_load_cov3" value="SKH-000023">
                         </div>
                         <div>
-                            <label class="text-sm font-normal block mb-1">Bottom Loader Cover 4</label>
+                            <label class="text-sm font-normal block mb-1">Bottom Loader Cover 3</label>
                             <input type="text" class="w-full border rounded px-3 py-2 text-sm" name="bottom_load_cov4"
                                 id="bottom_load_cov4" value="SKH-000023">
                         </div>
                         <div>
-                            <label class="text-sm font-normal block mb-1">Bottom Loader Cover 5</label>
+                            <label class="text-sm font-normal block mb-1">Bottom Loader Cover 4</label>
                             <input type="text" class="w-full border rounded px-3 py-2 text-sm" name="bottom_load_cov5"
                                 id="bottom_load_cov5" value="SKH-000023">
 
@@ -405,6 +417,8 @@ include('ajax_salibukur.php');
                 </div>
             </div>
             </form>
+            <?php include_once '../components/footer.php'; ?>
+
 
 
 </body>

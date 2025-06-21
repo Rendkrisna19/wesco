@@ -403,6 +403,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role']) && isset($_PO
     echo json_encode($response); // Send JSON response back to AJAX
     exit; // Stop further PHP execution
 }
+
+$id_user = $_SESSION['id_user'];
+$username = $_SESSION['username'];
+$nama_lengkap = isset($_SESSION['nama_lengkap']) ? $_SESSION['nama_lengkap'] : $username;
 ?>
 
 <!DOCTYPE html>
@@ -433,10 +437,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role']) && isset($_PO
             <div class="bg-white shadow p-6 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-cyan-700">Selamat Datang di Wesco,
                     <?= htmlspecialchars($nama_lengkap_session) ?>!</h1>
-                <div class="flex items-center space-x-3">
-                    <span class="text-gray-600"><?= htmlspecialchars($nama_lengkap_session) ?></span>
-                    <img src="https://media.istockphoto.com/id/1300845620/id/vektor/ikon-pengguna-datar-terisolasi-pada-latar-belakang-putih-simbol-pengguna-ilustrasi-vektor.jpg?s=612x612&w=0&k=20&c=QN0LOsRwA1dHZz9lsK modernisation-remove User"
-                        class="w-8 h-8 rounded-full">
+                <div class="relative group">
+                    <div class="flex items-center space-x-3 cursor-pointer">
+                        <span class="text-gray-600"><?= htmlspecialchars($nama_lengkap) ?></span>
+                        <img src="https://media.istockphoto.com/id/1300845620/id/vektor/ikon-pengguna-datar-terisolasi-pada-latar-belakang-putih-simbol-pengguna-ilustrasi-vektor.jpg?s=612x612&w=0&k=20&c=QN0LOsRwA1dHZz9lsKavYdSqUUnis3__FQLtZTQ--Ro="
+                            alt="User" class="w-8 h-8 rounded-full">
+                    </div>
+
+                    <div
+                        class="absolute hidden group-hover:block right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10 ring-1 ring-black ring-opacity-5">
+                        <div class="py-1">
+                            <a href="../auth/index.php"
+                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-cyan-700 hover:text-white">
+                                Logout
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -466,7 +482,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role']) && isset($_PO
                 </div>
             </div>
         </div>
+        <?php include_once '../components/footer.php'; ?>
+
     </div>
+
+
 
     <script>
     $(document).ready(function() {

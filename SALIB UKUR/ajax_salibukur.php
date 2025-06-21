@@ -14,7 +14,13 @@ function loadAfrnData() {
                     document.getElementById('no_polisi').value = data.no_polisi || '';
                     document.getElementById('volume_bridger').value = data.volume || '';
                     document.getElementById('tgl_serti_akhir').value = data.tgl_serti_akhir || '';
-                    document.getElementById('keluar_dppu').value = data.keluar_dppu || '';
+                    // BARIS BARU (SOLUSI)
+                    if (data.keluar_dppu) {
+                        // Ambil hanya 5 karakter pertama (HH:mm) dari string "HH:mm:ss"
+                        document.getElementById('keluar_dppu').value = data.keluar_dppu.substring(0, 5);
+                    } else {
+                        document.getElementById('keluar_dppu').value = '';
+                    }
 
                     // Tambahan: jarak komp
                     document.getElementById('jarak_komp1').value = data.jarak_komp1 || '186.5';

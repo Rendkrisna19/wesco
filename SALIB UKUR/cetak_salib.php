@@ -81,11 +81,12 @@ if (isset($_GET['id_afrn'])) { // Menggunakan id_afrn untuk pengambilan data
 }
 
 // Fungsi untuk menampilkan isi form (agar tidak duplikasi kode)
-function print_form($data) {
+function print_form($data)
+{
 ?>
 <table class="header-table">
     <tr>
-        <td>Tanggal</td>
+        <td style="width: 200px;">Tanggal</td>
         <td>: <?= date('l, d F Y', strtotime($data['tgl_rekam'])) ?></td>
     </tr>
     <tr>
@@ -102,102 +103,130 @@ function print_form($data) {
     </tr>
 </table>
 
+<div class="section-title">PEMERIKSAAN DAN PENCATATAN MINIMAL 10 MENIT SETELAH SETTLING TIME</div>
 <table class="main-table">
-    <tr>
-        <th colspan="2">JARAK T1 PADA DOKUMEN KALIBRASI</th>
-        <th colspan="3">JARAK CAIRAN TERHADAP T1 (ULLAGE) @ SUPPLY POINT</th>
-        <th colspan="2">
-            <div>DIPERIKSA & DICATAT OLEH</div>
-            <div class="sub">(Nama & Tanda Tangan)</div>
-        </th>
-    </tr>
-    <tr>
-        <th>JARAK (MM)</th>
-        <th>TEMP (°C)</th>
-        <th>JARAK (MM)</th>
-        <th>DENSITY OBA (Kg/L)</th>
-        <th>TEMP (°C)</th>
-        <th colspan="2" rowspan="7" class="ttd">
-            <img src="../image/stempel.png" alt="Logo Pertamina">
-            <div class="nama"><?= htmlspecialchars($data['diperiksa_t1']) ?></div>
-        </th>
-    </tr>
-    <?php for($i=1;$i<=4;$i++): ?>
-    <tr>
-        <td>KOMP. <?= $i ?>: <?= htmlspecialchars($data["jarak_komp$i"]) ?></td>
-        <td><?= htmlspecialchars($data["temp_komp$i"]) ?></td>
-        <td>KOMP. <?= $i ?>: <?= htmlspecialchars($data["jarak_cair_komp$i"]) ?></td>
-        <td><?= htmlspecialchars($data["dencity_cair_komp$i"]) ?></td>
-        <td><?= htmlspecialchars($data["temp_cair_komp_komp$i"]) ?></td>
-    </tr>
-    <?php endfor; ?>
-    <tr>
-        <td colspan="2"><strong>KETERANGAN :</strong></td>
-        <td colspan="3"><strong>KETERANGAN :</strong></td>
-    </tr>
-    <tr>
-        <td colspan="2"><?= nl2br(htmlspecialchars($data['ket_jarak_t1'])) ?></td>
-        <td colspan="3"><?= nl2br(htmlspecialchars($data['ket_jarak_cair_t1'])) ?></td>
-    </tr>
+    <thead>
+        <tr>
+            <th colspan="2">JARAK T1 PADA DOKUMEN KALIBRASI</th>
+            <th colspan="3">JARAK CAIRAN TERHADAP T1 (ULLAGE) @ SUPPLY POINT</th>
+            <th rowspan="2" colspan="1" style="width: 200px;">
+                <div>DIPERIKSA & DICATAT OLEH</div>
+                <div class="sub">(Nama & Tanda Tangan)</div>
+            </th>
+        </tr>
+        <tr>
+            <th>JARAK (MM)</th>
+            <th>TEMP (°C)</th>
+            <th>JARAK (MM)</th>
+            <th>DENSITY OBA (Kg/L)</th>
+            <th>TEMP (°C)</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php for ($i = 1; $i <= 4; $i++) : ?>
+        <tr>
+            <td>KOMP <?= $i ?>: <?= htmlspecialchars($data["jarak_komp$i"] ?? '') ?></td>
+            <td><?= htmlspecialchars($data["temp_komp$i"] ?? '') ?></td>
+            <td>KOMP <?= $i ?>: <?= htmlspecialchars($data["jarak_cair_komp$i"] ?? '') ?></td>
+            <td><?= htmlspecialchars($data["dencity_cair_komp$i"] ?? '') ?></td>
+            <td><?= htmlspecialchars($data["temp_cair_komp_komp$i"] ?? '') ?></td>
+            <?php if ($i === 1) : ?>
+            <td rowspan="6" class="ttd">
+                <img src="https://i.pinimg.com/originals/bc/f2/11/bcf211ef4cbf4f8883079941942ccb9c.png"
+                    alt="Logo Pertamina">
+                <div class="nama"><?= htmlspecialchars($data['diperiksa_t1']) ?></div>
+            </td>
+            <?php endif; ?>
+        </tr>
+        <?php endfor; ?>
+        <tr>
+            <td colspan="5" style="border-right: none;">&nbsp;</td>
+        </tr>
+        <tr>
+            <td colspan="2" style="border-right: none; font-weight:600;">KETERANGAN
+                :<br><?= nl2br(htmlspecialchars($data['ket_jarak_t1'])) ?></td>
+            <td colspan="3" style="border-right: none; font-weight:600;">KETERANGAN
+                :<br><?= nl2br(htmlspecialchars($data['ket_jarak_cair_t1'])) ?></td>
+        </tr>
+    </tbody>
 </table>
 
-<div class="section-title">PEMERIKSAAN OLEH SECURITY SEBELUM KELUAR LOKASI</div>
+<div class="section-title main-table">PEMERIKSAAN OLEH SECURITY SEBELUM KELUAR LOKASI</div>
 <table class="main-table">
-    <tr>
-        <th>NOMOR/KODE SEGEL</th>
-        <th>JAM KELUAR</th>
-        <th colspan="2">
-            <div>DIPERIKSA & DICATAT OLEH</div>
-            <div class="sub">(Nama & Tanda Tangan)</div>
-        </th>
-    </tr>
-    <tr>
-        <td>
-            <table class="segel-table">
-                <tr>
-                    <td>MAINHOLE 1</td>
-                    <td><?= htmlspecialchars($data['mainhole1']) ?></td>
-                </tr>
-                <tr>
-                    <td>MAINHOLE 2</td>
-                    <td><?= htmlspecialchars($data['mainhole2']) ?></td>
-                </tr>
-                <tr>
-                    <td>MAINHOLE 3</td>
-                    <td><?= htmlspecialchars($data['mainhole3']) ?></td>
-                </tr>
-                <tr>
-                    <td>MAINHOLE 4</td>
-                    <td><?= htmlspecialchars($data['mainhole4']) ?></td>
-                </tr>
-                <tr>
-                    <td>BOTTOM LOAD COVER 1</td>
-                    <td><?= htmlspecialchars($data['bottom_load_cov1']) ?></td>
-                </tr>
-                <tr>
-                    <td>BOTTOM LOAD COVER 2</td>
-                    <td><?= htmlspecialchars($data['bottom_load_cov2']) ?></td>
-                </tr>
-                <tr>
-                    <td>BOTTOM LOAD COVER 3</td>
-                    <td><?= htmlspecialchars($data['bottom_load_cov3']) ?></td>
-                </tr>
-                <tr>
-                    <td>BOTTOM LOAD COVER 4</td>
-                    <td><?= htmlspecialchars($data['bottom_load_cov4']) ?></td>
-                </tr>
-                <tr>
-                    <td>BOTTOM LOAD COVER 5</td>
-                    <td><?= htmlspecialchars($data['bottom_load_cov5']) ?></td>
-                </tr>
-            </table>
-        </td>
-        <td style="text-align:center; vertical-align:middle;"><?= htmlspecialchars($data['keluar_dppu']) ?></td>
-        <td colspan="2" class="ttd">
-            <img src="../image/stempel.png" alt="Logo Pertamina">
-            <div class="nama"><?= htmlspecialchars($data['diperiksa_segel']) ?></div>
-        </td>
-    </tr>
+    <thead>
+        <tr>
+            <th>NOMOR/KODE SEGEL</th>
+            <th style="width: 100px;">JAM KELUAR</th>
+            <th style="width: 200px;">
+                <div>DIPERIKSA & DICATAT OLEH</div>
+                <div class="sub">(Nama & Tanda Tangan)</div>
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                <table class="segel-table border-collapse ">
+                    <tbody>
+                        <tr>
+                            <td class="border border-black p-2 font-medium">MAINHOLE 1</td>
+                            <td class="border border-black p-2 w-6 text-center">:</td>
+                            <td class="border border-black p-2">SKH-000024</td>
+                        </tr>
+
+                        <tr>
+                            <td class="border border-black p-2 font-medium">MAINHOLE 2</td>
+                            <td class="border border-black p-2 w-6 text-center">:</td>
+                            <td class="border border-black p-2">SKH-000024</td>
+                        </tr>
+
+                        <tr>
+                            <td class="border border-black p-2 font-medium">MAINHOLE 3</td>
+                            <td class="border border-black p-2 w-6 text-center">:</td>
+                            <td class="border border-black p-2">SKH-000024</td>
+                        </tr>
+
+                        <tr>
+                            <td class="border border-black p-2 font-medium">BOTTOM LOADER COVER</td>
+                            <td class="border border-black p-2 w-6 text-center">:</td>
+                            <td class="border border-black p-2">SKH-000024</td>
+                        </tr>
+
+                        <tr>
+                            <td class="border border-black p-2 font-medium">BOTTOM LOADER VALVE 1</td>
+                            <td class="border border-black p-2 w-6 text-center">:</td>
+                            <td class="border border-black p-2">SKH-000024</td>
+                        </tr>
+
+                        <tr>
+                            <td class="border border-black p-2 font-medium">BOTTOM LOADER VALVE 2</td>
+                            <td class="border border-black p-2 w-6 text-center">:</td>
+                            <td class="border border-black p-2">SKH-000024</td>
+                        </tr>
+
+                        <tr>
+                            <td class="border border-black p-2 font-medium">BOTTOM LOADER VALVE 3</td>
+                            <td class="border border-black p-2 w-6 text-center">:</td>
+                            <td class="border border-black p-2">SKH-000024</td>
+                        </tr>
+
+                        <tr>
+                            <td class="border border-black p-2 font-medium">BOTTOM LOADER VALVE 4</td>
+                            <td class="border border-black p-2 w-6 text-center">:</td>
+                            <td class="border border-black p-2">SKH-000024</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </td>
+            <td style="text-align:center; vertical-align:middle;"><?= htmlspecialchars($data['keluar_dppu']) ?></td>
+            <td class="ttd" style="vertical-align: middle;">
+                <img src="https://i.pinimg.com/originals/bc/f2/11/bcf211ef4cbf4f8883079941942ccb9c.png"
+                    alt="Logo Pertamina">
+                <div class="nama"><?= htmlspecialchars($data['diperiksa_segel']) ?></div>
+            </td>
+        </tr>
+    </tbody>
 </table>
 
 <div class="catatan">
@@ -224,183 +253,200 @@ function print_form($data) {
 
 <head>
     <meta charset="UTF-8">
-    <title>Form Pemeriksaan</title>
+    <title>Form Pemeriksaan - Hasil Modifikasi</title>
     <style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    .print-container {
+        width: 100%;
+        border: 1px solid #000;
+        box-sizing: border-box;
+        padding: 10mm;
+        margin: 0 auto;
+        background: #fff;
+    }
+
+    .header-table {
+        border-collapse: collapse;
+        /* width dihapus agar lebar tabel otomatis sesuai konten */
+        font-size: 11px;
+        margin-bottom: 10px;
+        border: 1px solid #000;
+        /* Warna border diubah menjadi hitam */
+    }
+
+    .header-table td {
+        padding: 4px 6px;
+        /* Padding diperkecil agar lebih rapat */
+        border: 1px solid #000;
+        /* Warna border diubah menjadi hitam */
+    }
+
+    .header-table .label {
+        font-weight: bold;
+        /* width dihapus agar lebar kolom menyesuaikan otomatis */
+    }
+
+    .main-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 5px;
+        font-size: 11px;
+    }
+
+    .main-table th,
+    .main-table td {
+        border: 1px solid #000;
+        padding: 2px 5px;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .main-table th {
+        font-weight: 600;
+        /* Font bold tidak terlalu tebal */
+        text-align: center;
+        vertical-align: middle;
+        background: #fff;
+        /* Tidak ada background abu-abu */
+    }
+
+    .main-table tbody td {
+        height: 20px;
+        /* Memberi tinggi minimum pada sel data */
+    }
+
+    .main-table .ttd {
+        text-align: center;
+        vertical-align: top;
+        padding-top: 5px;
+        position: relative;
+        height: 150px;
+        /* Menentukan tinggi area TTD */
+    }
+
+    .main-table .ttd img {
+        max-width: 60px;
+        margin-bottom: 2px;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        top: 15px;
+        /* Posisi vertikal logo */
+        opacity: 0.8;
+    }
+
+    .main-table .ttd .nama {
+        font-weight: 600;
+        font-size: 1em;
+        position: absolute;
+        bottom: 10px;
+        /* Posisi nama di bawah */
+        left: 50%;
+        transform: translateX(-50%);
+        text-decoration: underline;
+    }
+
+    .main-table .sub {
+        font-size: 0.9em;
+        font-weight: normal;
+        font-style: italic;
+    }
+
+    .section-title {
+        text-align: center;
+        font-weight: 600;
+        margin: 10px 0 3px 0;
+        font-size: 12px;
+        text-decoration: underline;
+    }
+
+    .catatan {
+        font-size: 10px;
+        margin-top: 10px;
+    }
+
+    .catatan ul {
+        margin: 2px 0 0 15px;
+        padding: 0;
+        list-style-type: disc;
+    }
+
+    .catatan li {
+        margin-bottom: 2px;
+    }
+
+    .segel-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 11px;
+    }
+
+    .segel-table td {
+        /* border-collapse: collapse; */
+    }
+
+    .segel-table td:first-child {
+        width: 150px;
+        /* Lebar kolom nama segel */
+    }
+
     @media print {
         @page {
-            size: A4 landscape;
-            margin: 5mm;
-            /* Mengurangi margin halaman */
+            size: A4 portrait;
+            margin: 8mm;
         }
 
         body {
             margin: 0;
-            padding: 0;
-            font-size: 9px;
-            /* Mengurangi ukuran font dasar */
+            font-size: 10px;
             -webkit-print-color-adjust: exact;
-            /* Pastikan warna latar belakang dicetak */
-        }
-
-        .wrapper {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            align-items: flex-start;
-            width: 100%;
-            gap: 5mm;
-            /* Mengurangi jarak antar kontainer */
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            /* Pastikan padding dan border termasuk dalam lebar */
         }
 
         .print-container {
-            width: 49%;
-            /* Tetap 49% untuk dua kolom */
             border: 1px solid #000;
-            box-sizing: border-box;
-            padding: 5mm 6mm;
-            /* Mengurangi padding internal */
-            margin: 0;
-            min-height: calc(210mm - 10mm);
+            width: 100%;
+            height: calc(297mm - 16mm);
             /* Tinggi A4 - 2x margin halaman */
-            height: auto;
-            /* Biarkan tinggi menyesuaikan konten */
-            background: #fff;
+            padding: 5mm;
+            margin: 0;
             page-break-inside: avoid;
-            /* Hindari pemotongan kontainer di tengah halaman */
         }
 
-        .header-table {
-            width: 100%;
+        /* Menyesuaikan ukuran font dan padding untuk print */
+        .header-table,
+        .main-table,
+        .segel-table {
             font-size: 10px;
-            /* Font lebih kecil */
-            margin-bottom: 4px;
-            /* Margin lebih kecil */
-        }
 
-        .header-table td {
-            padding: 1px 3px;
-            /* Padding lebih kecil */
-        }
-
-        .main-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 4px;
-            /* Margin lebih kecil */
-            font-size: 10px;
-            /* Font lebih kecil */
-        }
-
-        .main-table th,
-        .main-table td {
-            border: 1px solid #000;
-            padding: 2px 3px;
-            /* Padding lebih kecil */
-            text-align: left;
-        }
-
-        .main-table th {
-            background: #f3f3f3;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .main-table .ttd {
-            text-align: center;
-            vertical-align: top;
-            padding-top: 5px;
-            /* Padding lebih kecil */
-            position: relative;
-            /* Untuk posisi gambar stempel */
-        }
-
-        .main-table .ttd img {
-            max-width: 50px;
-            /* Ukuran stempel lebih kecil */
-            margin-bottom: 2px;
-            /* Margin lebih kecil */
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            top: 10px;
-            /* Sesuaikan posisi vertikal stempel */
-            opacity: 0.7;
-            /* Membuat stempel sedikit transparan */
-        }
-
-        .main-table .ttd .nama {
-            font-weight: bold;
-            font-size: 0.9em;
-            /* Font lebih kecil */
-            margin-top: 50px;
-            /* Sesuaikan dengan tinggi gambar stempel */
-        }
-
-
-        .main-table .sub {
-            font-size: 0.8em;
-            /* Font lebih kecil */
-            font-style: italic;
-        }
-
-        .section-title {
-            text-align: center;
-            font-weight: bold;
-            margin: 4px 0 3px 0;
-            /* Margin lebih kecil */
-            font-size: 11px;
-            /* Font lebih kecil */
         }
 
         .catatan {
             font-size: 9px;
-            /* Font lebih kecil */
-            margin-top: 4px;
-            /* Margin lebih kecil */
         }
 
-        .catatan ul {
-            margin: 0 0 0 10px;
-            /* Margin lebih kecil */
-            padding: 0;
+        .main-table th,
+        .main-table td {
+            padding: 1px 4px;
         }
 
-        .catatan li {
-            margin-bottom: 1px;
-            /* Margin lebih kecil */
+        .main-table tbody td {
+            height: 18px;
         }
 
-        .segel-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 9px;
-            /* Font lebih kecil */
-            margin-top: -3px;
-            /* Sesuaikan jika ada spasi berlebih */
-        }
-
-        .segel-table td {
-            border: none;
-            padding: 0.5px 1px;
-            /* Padding lebih kecil */
-        }
     }
     </style>
 </head>
 
 <body>
-    <div class="wrapper">
-        <div class="print-container">
-            <?php print_form($data); ?>
-        </div>
-        <div class="print-container">
-            <?php print_form($data); ?>
-        </div>
+    <div class="print-container">
+        <?php print_form($data); ?>
     </div>
+
     <script>
     window.onload = function() {
         window.print();
