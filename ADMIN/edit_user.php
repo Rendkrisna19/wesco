@@ -11,24 +11,24 @@ $username_session = $_SESSION['username'];
 $nama_lengkap_session = isset($_SESSION['nama_lengkap']) ? $_SESSION['nama_lengkap'] : $username_session;
 include '../config/koneksi.php';
 
-$response = []; // To store SweetAlert messages
+$response = []; // Untuk menyimpan pesan SweetAlert
 
-// Variables to hold the ID and Role obtained from the initial GET request (URL)
+// Variabel untuk menyimpan ID dan Role yang diperoleh dari permintaan GET awal (URL)
 $current_id_to_edit = 0;
 $current_role_to_edit = '';
 
-// --- Initial GET Request (when page is first loaded via a link from index.php) ---
+// --- Permintaan GET Awal (saat halaman pertama kali dimuat melalui tautan dari index.php) ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['role'])) {
     $current_id_to_edit = (int)$_GET['id'];
-    $current_role_to_edit = strtolower($_GET['role']); // Ensure lowercase for consistency
+    $current_role_to_edit = strtolower($_GET['role']); // Pastikan huruf kecil untuk konsistensi
 
-    // Basic validation: Check if ID is valid and role is known
+    // Validasi dasar: Periksa apakah ID valid dan role diketahui
     if ($current_id_to_edit <= 0 || !in_array($current_role_to_edit, ['pegawai', 'driver'])) {
         header("Location: index.php?error=Parameter ID atau role tidak valid.");
         exit;
     }
 
-    // Verify if the record actually exists before proceeding
+    // Verifikasi apakah record benar-benar ada sebelum melanjutkan
     $check_sql = '';
     if ($current_role_to_edit === 'pegawai') {
         $check_sql = "SELECT COUNT(*) FROM user WHERE id_user = ?";
@@ -49,12 +49,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['r
     }
 
 } else if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['load_form'])) {
-    // If it's a GET request without ID/role (e.g., direct access to edit_user.php), redirect to list
+    // Jika itu adalah permintaan GET tanpa ID/role (misalnya, akses langsung ke edit_user.php), redirect ke daftar
     header("Location: index.php");
     exit;
 }
 
-// Fetch bridger data for the dropdown in driver form (always needed for AJAX part loading forms)
+// Ambil data bridger untuk dropdown di form driver (selalu dibutuhkan untuk bagian AJAX yang memuat form)
 $bridger_data = [];
 $bridger_query = $conn->query("SELECT id_bridger, no_polisi FROM bridger");
 if ($bridger_query) {
@@ -64,10 +64,10 @@ if ($bridger_query) {
 }
 
 
-// --- AJAX Request Handling (responds with HTML content for dynamic form sections) ---
-// This part runs when JavaScript makes a GET request to load the form HTML, pre-filled with data.
+// --- Penanganan Permintaan AJAX (menanggapi dengan konten HTML untuk bagian form dinamis) ---
+// Bagian ini berjalan ketika JavaScript membuat permintaan GET untuk memuat HTML form, diisi dengan data.
 if (isset($_GET['load_form'])) {
-    header('Content-Type: text/html'); // Ensure HTML content type for AJAX response
+    header('Content-Type: text/html'); // Pastikan tipe konten HTML untuk respons AJAX
     $role_to_load = strtolower($_GET['load_form']);
     $id_to_load = isset($_GET['id_to_load']) ? (int)$_GET['id_to_load'] : 0; 
 
@@ -262,110 +262,144 @@ if (isset($_GET['load_form'])) {
 </div>
 <?php
     }
-    exit(); // Important: Stop script execution after sending AJAX content
+    exit(); // Penting: Hentikan eksekusi skrip setelah mengirim konten AJAX
 }
 
-// --- POST Request: Handle Form Submission for Update ---
-// This part runs when the main form is submitted via AJAX
+// --- Permintaan POST: Menangani Pengiriman Form untuk Update ---
+// Bagian ini berjalan ketika form utama disubmit melalui AJAX
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role']) && isset($_POST['id_to_update'])) {
-    header('Content-Type: application/json'); // Respond with JSON
-    $response = ['status' => 'error', 'message' => 'Terjadi kesalahan tidak terduga.']; // Default response
+    header('Content-Type: application/json'); // Respon dengan JSON
+    $response = ['status' => 'error', 'message' => 'Terjadi kesalahan tidak terduga.']; // Respon default
 
     $id_to_update = (int)$_POST['id_to_update'];
     $role = strtolower($_POST['role']);
 
-    // Handle Pegawai Update
+    // Tangani Update Pegawai
     if ($role === 'pegawai') {
         $nama_lengkap_pegawai = $_POST['nama_lengkap'];
         $alamat_pegawai       = $_POST['alamat'];
         $tempat_lahir_pegawai = $_POST['tempat_lahir'];
         $tanggal_lahir_pegawai = $_POST['tanggal_lahir'];
         $username_pegawai     = $_POST['username'];
-        $password             = $_POST['password']; // This might be empty if not changing
-        $confirm              = $_POST['confirm_password']; // This might be empty if not changing
-        $existing_ttd         = $_POST['existing_ttd'] ?? ''; // Current file name if not uploading new
-        $existing_stempel     = $_POST['existing_stempel'] ?? ''; // Current file name if not uploading new
+        $password             = $_POST['password']; // Ini mungkin kosong jika tidak diubah
+        $confirm              = $_POST['confirm_password']; // Ini mungkin kosong jika tidak diubah
+        $existing_ttd         = $_POST['existing_ttd'] ?? ''; // Nama file saat ini jika tidak mengunggah yang baru
+        $existing_stempel     = $_POST['existing_stempel'] ?? ''; // Nama file saat ini jika tidak mengunggah yang baru
 
+        // Validasi password sisi server
+        if ((!empty($password) && empty($confirm)) || (empty($password) && !empty($confirm))) {
+            $response = ['status' => 'warning', 'message' => 'Kedua kolom Password dan Confirm Password harus diisi atau dikosongkan bersamaan.'];
+            echo json_encode($response);
+            exit; // Hentikan eksekusi jika validasi gagal
+        }
         if (!empty($password) && $password !== $confirm) {
             $response = ['status' => 'warning', 'message' => 'Password dan Confirm Password tidak sama!'];
-        } else {
-            $password_update_clause = "";
-            $password_hash = null; // Will only be set if password is provided
-            if (!empty($password)) {
-                $password_hash = password_hash($password, PASSWORD_DEFAULT);
-                $password_update_clause = ", password = ?";
+            echo json_encode($response);
+            exit; // Hentikan eksekusi jika password tidak cocok
+        }
+
+        $password_update_clause = "";
+        $password_hash = null; // Hanya akan diatur jika password disediakan
+        if (!empty($password)) {
+            $password_hash = password_hash($password, PASSWORD_DEFAULT);
+            $password_update_clause = ", password = ?";
+        }
+
+        $gambar_ttd = $existing_ttd; // Mulai dengan nilai yang ada
+        $gambar_stempel = $existing_stempel; // Mulai dengan nilai yang ada
+        $upload_dir = '../uploads/';
+        if (!is_dir($upload_dir)) {
+            if (!mkdir($upload_dir, 0777, true)) {
+                $response = ['status' => 'error', 'message' => 'Gagal membuat direktori unggahan.'];
+                echo json_encode($response);
+                exit;
+            }
+        }
+
+        // Proses Unggah TTD
+        if (isset($_FILES['ttd']) && $_FILES['ttd']['error'] == UPLOAD_ERR_OK && $_FILES['ttd']['size'] > 0) {
+            $ext = pathinfo($_FILES['ttd']['name'], PATHINFO_EXTENSION);
+            $new_ttd_name = 'ttd_' . time() . '_' . uniqid() . '.' . $ext; // Tambahkan uniqid untuk keunikan yang lebih baik
+            if (move_uploaded_file($_FILES['ttd']['tmp_name'], $upload_dir . $new_ttd_name)) {
+                // Hapus file lama jika yang baru berhasil diunggah
+                if (!empty($existing_ttd) && file_exists($upload_dir . $existing_ttd)) {
+                    unlink($upload_dir . $existing_ttd);
+                }
+                $gambar_ttd = $new_ttd_name;
+            } else {
+                $response = ['status' => 'error', 'message' => 'Gagal mengunggah file TTD.'];
+                echo json_encode($response);
+                exit; // Hentikan jika upload file gagal
+            }
+        }
+
+        // Proses Unggah Stempel
+        if (isset($_FILES['stempel']) && $_FILES['stempel']['error'] == UPLOAD_ERR_OK && $_FILES['stempel']['size'] > 0) {
+            $ext2 = pathinfo($_FILES['stempel']['name'], PATHINFO_EXTENSION);
+            $new_stempel_name = 'stempel_' . time() . '_' . uniqid() . '.' . $ext2; // Tambahkan uniqid untuk keunikan yang lebih baik
+            if (move_uploaded_file($_FILES['stempel']['tmp_name'], $upload_dir . $new_stempel_name)) {
+                // Hapus file lama jika yang baru berhasil diunggah
+                if (!empty($existing_stempel) && file_exists($upload_dir . $existing_stempel)) {
+                    unlink($upload_dir . $existing_stempel);
+                }
+                $gambar_stempel = $new_stempel_name;
+            } else {
+                $response = ['status' => 'error', 'message' => 'Gagal mengunggah file Stempel.'];
+                echo json_encode($response);
+                exit; // Hentikan jika upload file gagal
+            }
+        }
+
+        // Siapkan statement SQL untuk update user
+        $sql = "UPDATE user SET nama_lengkap = ?, alamat = ?, tempat_lahir = ?, tanggal_lahir = ?, username = ?, gambar_ttd = ?, gambar_stempel = ? $password_update_clause WHERE id_user = ?";
+        
+        $types = "sssssss"; // Untuk nama, alamat, tempat_lahir, tanggal_lahir, username, ttd, stempel
+        $params_values = [
+            $nama_lengkap_pegawai,
+            $alamat_pegawai,
+            $tempat_lahir_pegawai,
+            $tanggal_lahir_pegawai,
+            $username_pegawai,
+            $gambar_ttd,
+            $gambar_stempel
+        ];
+
+        if (!empty($password_hash)) {
+            $types .= "s"; // Tambahkan tipe string untuk password
+            $params_values[] = $password_hash; // Tambahkan hash password ke parameter
+        }
+        $types .= "i"; // Tambahkan tipe integer untuk id_user
+        $params_values[] = $id_to_update; // Tambahkan id_user ke parameter
+
+        $stmt = mysqli_prepare($conn, $sql);
+        
+        if ($stmt) {
+            // Menggunakan call_user_func_array untuk mysqli_stmt_bind_param agar parameter dinamis dapat diikat
+            // secara benar (karena mereka harus berupa referensi).
+            // Buat array argumen untuk call_user_func_array: elemen pertama adalah $stmt, elemen kedua adalah $types,
+            // lalu sisa elemen adalah nilai-nilai parameter yang akan diikat.
+            $bind_params = array_merge([$stmt, $types], $params_values);
+            // Setiap nilai dalam $params_values harus diubah menjadi referensi.
+            // Loop melalui $bind_params dari indeks 2 (setelah $stmt dan $types)
+            for ($i = 2; $i < count($bind_params); $i++) {
+                $bind_params[$i] = &$bind_params[$i];
             }
 
-            $gambar_ttd = $existing_ttd; // Start with existing value
-            $gambar_stempel = $existing_stempel; // Start with existing value
-            $upload_dir = '../uploads/';
-            if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
-
-            // Process TTD Upload
-            if (isset($_FILES['ttd']) && $_FILES['ttd']['error'] == 0 && $_FILES['ttd']['size'] > 0) {
-                $ext = pathinfo($_FILES['ttd']['name'], PATHINFO_EXTENSION);
-                $new_ttd_name = 'ttd_' . time() . '.' . $ext;
-                if (move_uploaded_file($_FILES['ttd']['tmp_name'], $upload_dir . $new_ttd_name)) {
-                    $gambar_ttd = $new_ttd_name;
-                    // Optional: Delete old file if it exists and a new one was uploaded successfully
-                    if (!empty($existing_ttd) && file_exists($upload_dir . $existing_ttd)) {
-                         unlink($upload_dir . $existing_ttd);
-                    }
-                } else {
-                    $response = ['status' => 'error', 'message' => 'Gagal mengunggah file TTD.'];
-                }
-            }
-
-            // Process Stempel Upload
-            if (isset($_FILES['stempel']) && $_FILES['stempel']['error'] == 0 && $_FILES['stempel']['size'] > 0) {
-                $ext2 = pathinfo($_FILES['stempel']['name'], PATHINFO_EXTENSION);
-                $new_stempel_name = 'stempel_' . time() . '.' . $ext2;
-                if (move_uploaded_file($_FILES['stempel']['tmp_name'], $upload_dir . $new_stempel_name)) {
-                    $gambar_stempel = $new_stempel_name;
-                    // Optional: Delete old file if it exists and a new one was uploaded successfully
-                    if (!empty($existing_stempel) && file_exists($upload_dir . $existing_stempel)) {
-                         unlink($upload_dir . $existing_stempel);
-                    }
-                } else {
-                    $response = ['status' => 'error', 'message' => 'Gagal mengunggah file Stempel.'];
-                }
-            }
-
-            // Only proceed with DB update if no file upload errors or password mismatch
-            if (!isset($response['status']) || ($response['status'] !== 'error' && $response['status'] !== 'warning')) {
-                $sql = "UPDATE user SET nama_lengkap = ?, alamat = ?, tempat_lahir = ?, tanggal_lahir = ?, username = ?, gambar_ttd = ?, gambar_stempel = ? $password_update_clause WHERE id_user = ?";
-                
-                $types = "sssssss"; // For nama, alamat, tempat_lahir, tanggal_lahir, username, ttd, stempel
-                $params = [
-                    &$nama_lengkap_pegawai,
-                    &$alamat_pegawai,
-                    &$tempat_lahir_pegawai,
-                    &$tanggal_lahir_pegawai,
-                    &$username_pegawai,
-                    &$gambar_ttd,
-                    &$gambar_stempel
-                ];
-
-                if (!empty($password_hash)) {
-                    $types .= "s"; // Add string type for password
-                    $params[] = &$password_hash; // Add password hash to params
-                }
-                $types .= "i"; // Add integer type for id_user
-                $params[] = &$id_to_update; // Add id_user to params
-
-                $stmt = mysqli_prepare($conn, $sql);
-                mysqli_stmt_bind_param($stmt, $types, ...$params); // Use splat operator for params
-                
+            if (call_user_func_array('mysqli_stmt_bind_param', $bind_params)) {
                 if (mysqli_stmt_execute($stmt)) {
                     $response = ['status' => 'success', 'message' => 'Data pegawai berhasil diupdate!', 'redirect' => 'dashboard.php'];
                 } else {
                     $response = ['status' => 'error', 'message' => 'Gagal mengupdate data pegawai: ' . mysqli_error($conn)];
                 }
-                mysqli_stmt_close($stmt);
+            } else {
+                $response = ['status' => 'error', 'message' => 'Gagal mengikat parameter untuk pegawai: ' . mysqli_error($conn)];
             }
+            mysqli_stmt_close($stmt);
+        } else {
+             $response = ['status' => 'error', 'message' => 'Gagal mempersiapkan statement SQL untuk pegawai: ' . mysqli_error($conn)];
         }
     } 
-    // Handle Driver Update
+    // Tangani Update Driver
     elseif ($role === 'driver') {
         $id_bridger_driver    = $_POST['id_bridger'];
         $nama_driver          = $_POST['nama_driver'];
@@ -375,33 +409,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role']) && isset($_PO
         $tempat_lahir_driver  = $_POST['tempat_lahir'];
         $tanggal_lahir_driver = $_POST['tanggal_lahir'];
 
-        // Optional: Check if `nama_driver` already exists for another driver (excluding the current one being updated)
+        // Periksa apakah `nama_driver` sudah ada untuk driver lain (kecuali yang sedang diupdate)
         $check_driver_sql = "SELECT COUNT(*) FROM driver WHERE nama_driver = ? AND id_driver != ?";
         $check_stmt = mysqli_prepare($conn, $check_driver_sql);
-        mysqli_stmt_bind_param($check_stmt, "si", $nama_driver, $id_to_update);
-        mysqli_stmt_execute($check_stmt);
-        mysqli_stmt_bind_result($check_stmt, $count);
-        mysqli_stmt_fetch($check_stmt);
-        mysqli_stmt_close($check_stmt);
+        
+        if ($check_stmt) {
+            mysqli_stmt_bind_param($check_stmt, "si", $nama_driver, $id_to_update);
+            mysqli_stmt_execute($check_stmt);
+            mysqli_stmt_bind_result($check_stmt, $count);
+            mysqli_stmt_fetch($check_stmt);
+            mysqli_stmt_close($check_stmt);
 
-        if ($count > 0) {
-            $response = ['status' => 'warning', 'message' => 'Nama Driver sudah ada untuk driver lain. Gunakan nama driver yang berbeda.'];
-        } else {
-            $sql_driver = "UPDATE driver SET id_bridger = ?, nama_driver = ?, no_ktp = ?, nama_lengkap = ?, alamat = ?, tempat_lahir = ?, tanggal_lahir = ? WHERE id_driver = ?";
-            $stmt_driver = mysqli_prepare($conn, $sql_driver);
-            // 'issssssi' -> int (id_bridger), string (nama_driver), string (no_ktp), string (nama_lengkap), string (alamat), string (tempat_lahir), string (tanggal_lahir), int (id_driver)
-            mysqli_stmt_bind_param($stmt_driver, "issssssi", $id_bridger_driver, $nama_driver, $no_ktp_driver, $nama_lengkap_driver, $alamat_driver, $tempat_lahir_driver, $tanggal_lahir_driver, $id_to_update);
-            
-            if (mysqli_stmt_execute($stmt_driver)) {
-                $response = ['status' => 'success', 'message' => 'Data driver berhasil diupdate!', 'redirect' => 'index.php'];
+            if ($count > 0) {
+                $response = ['status' => 'warning', 'message' => 'Nama Driver sudah ada untuk driver lain. Gunakan nama driver yang berbeda.'];
             } else {
-                $response = ['status' => 'error', 'message' => 'Gagal mengupdate data driver: ' . mysqli_error($conn)];
+                $sql_driver = "UPDATE driver SET id_bridger = ?, nama_driver = ?, no_ktp = ?, nama_lengkap = ?, alamat = ?, tempat_lahir = ?, tanggal_lahir = ? WHERE id_driver = ?";
+                $stmt_driver = mysqli_prepare($conn, $sql_driver);
+                
+                if ($stmt_driver) {
+                    // 'issssssi' -> int (id_bridger), string (nama_driver), string (no_ktp), string (nama_lengkap), string (alamat), string (tempat_lahir), string (tanggal_lahir), int (id_driver)
+                    mysqli_stmt_bind_param($stmt_driver, "issssssi", 
+                        $id_bridger_driver, 
+                        $nama_driver, 
+                        $no_ktp_driver, 
+                        $nama_lengkap_driver, 
+                        $alamat_driver, 
+                        $tempat_lahir_driver, 
+                        $tanggal_lahir_driver, 
+                        $id_to_update
+                    );
+                    
+                    if (mysqli_stmt_execute($stmt_driver)) {
+                        $response = ['status' => 'success', 'message' => 'Data driver berhasil diupdate!', 'redirect' => 'index.php'];
+                    } else {
+                        $response = ['status' => 'error', 'message' => 'Gagal mengupdate data driver: ' . mysqli_error($conn)];
+                    }
+                    mysqli_stmt_close($stmt_driver);
+                } else {
+                    $response = ['status' => 'error', 'message' => 'Gagal mempersiapkan statement SQL untuk driver: ' . mysqli_error($conn)];
+                }
             }
-            mysqli_stmt_close($stmt_driver);
+        } else {
+             $response = ['status' => 'error', 'message' => 'Gagal mempersiapkan statement SQL untuk pengecekan driver: ' . mysqli_error($conn)];
         }
     }
-    echo json_encode($response); // Send JSON response back to AJAX
-    exit; // Stop further PHP execution
+    echo json_encode($response); // Kirim respons JSON kembali ke AJAX
+    exit; // Hentikan eksekusi PHP selanjutnya
 }
 
 $id_user = $_SESSION['id_user'];
@@ -482,23 +535,25 @@ $nama_lengkap = isset($_SESSION['nama_lengkap']) ? $_SESSION['nama_lengkap'] : $
                 </div>
             </div>
         </div>
-        <?php include_once '../components/footer.php'; ?>
+
 
     </div>
+    <?php include_once '../components/footer.php'; ?>
+
 
 
 
     <script>
     $(document).ready(function() {
-        // Get the ID and role from PHP variables (set from URL)
+        // Ambil ID dan role dari variabel PHP (diatur dari URL)
         const currentId = <?= json_encode($current_id_to_edit) ?>;
         const currentRole = <?= json_encode($current_role_to_edit) ?>;
 
-        // Load the correct form based on the URL parameters on page load
+        // Muat form yang benar berdasarkan parameter URL saat halaman dimuat
         if (currentId && currentRole) {
             loadForm(currentRole, currentId);
         } else {
-            // Fallback or error handling if somehow ID/role are missing (though PHP should redirect)
+            // Fallback atau penanganan error jika ID/role entah bagaimana hilang (meskipun PHP harusnya redirect)
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
@@ -509,51 +564,61 @@ $nama_lengkap = isset($_SESSION['nama_lengkap']) ? $_SESSION['nama_lengkap'] : $
             });
         }
 
-        // The role selection dropdown is disabled on edit page, so no change listener needed for it.
-        // The role is determined by the URL and passed to loadForm and form submission via hidden input.
+        // Dropdown pemilihan role dinonaktifkan di halaman edit, jadi tidak perlu listener perubahan untuk itu.
+        // Role ditentukan oleh URL dan diteruskan ke loadForm serta pengiriman form melalui input tersembunyi.
 
-        // Handle form submission via AJAX for the main form
-        // We use $(document).on because the content within #dynamic-form-container is dynamic
+        // Tangani pengiriman form via AJAX untuk form utama
+        // Kita menggunakan $(document).on karena konten di dalam #dynamic-form-container bersifat dinamis
         $(document).on('submit', '#main-form', function(e) {
-            e.preventDefault(); // Prevent default browser form submission
+            e.preventDefault(); // Mencegah pengiriman form default browser
 
             var form = $(this);
-            var formData = new FormData(form[0]); // Create FormData object from the form
+            var formData = new FormData(form[0]); // Buat objek FormData dari form
 
-            // Add the role and ID from the hidden inputs to the formData for submission
+            // Tambahkan role dan ID dari input tersembunyi ke formData untuk pengiriman
             formData.append('role', $('#hidden_role').val());
-            formData.append('id_to_update', currentId); // Ensure ID is part of submitted data
+            formData.append('id_to_update',
+            currentId); // Pastikan ID adalah bagian dari data yang dikirim
 
-            // Special handling for password confirmation only for Pegawai form
+            // Penanganan khusus untuk konfirmasi password hanya untuk form Pegawai
             var role = formData.get('role');
-            if (role === 'pegawai') { // Check for 'pegawai' here, not 'Pegawai'
+            if (role.toLowerCase() === 'pegawai') { // Periksa 'pegawai' di sini, bukan 'Pegawai'
                 var password = formData.get('password');
                 var confirmPassword = formData.get('confirm_password');
 
-                // Only validate if a new password is being set
-                if (password !== '' || confirmPassword !== '') {
-                    if (password !== confirmPassword) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Peringatan!',
-                            text: 'Password dan Confirm Password tidak sama.',
-                            confirmButtonText: 'OK'
-                        });
-                        return false; // Stop AJAX submission
-                    }
+                // Validasi jika password diisi
+                if ((password !== '' && confirmPassword === '') || (password === '' &&
+                        confirmPassword !== '')) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Peringatan!',
+                        text: 'Kedua kolom Password dan Confirm Password harus diisi atau dikosongkan bersamaan.',
+                        confirmButtonText: 'OK'
+                    });
+                    return false; // Hentikan pengiriman AJAX
+                }
+
+                if (password !== '' && password !== confirmPassword) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Peringatan!',
+                        text: 'Password dan Confirm Password tidak sama.',
+                        confirmButtonText: 'OK'
+                    });
+                    return false; // Hentikan pengiriman AJAX
                 }
             }
 
-            // Submit form data using AJAX
+            // Kirim data form menggunakan AJAX
             $.ajax({
-                url: 'edit_user.php', // Submit to *this* PHP file for update processing
+                url: 'edit_user.php', // Kirim ke file PHP *ini* untuk pemrosesan update
                 type: 'POST',
-                data: formData, // Send FormData object
-                processData: false, // Essential for FormData to send file uploads
-                contentType: false, // Essential for FormData to send file uploads
-                dataType: 'json', // Expect JSON response from PHP
+                data: formData, // Kirim objek FormData
+                processData: false, // Penting untuk FormData untuk mengirim upload file
+                contentType: false, // Penting untuk FormData untuk mengirim upload file
+                dataType: 'json', // Harapkan respons JSON dari PHP
                 success: function(response) {
-                    // Handle JSON response from PHP
+                    // Tangani respons JSON dari PHP
                     Swal.fire({
                         icon: response.status, // 'success', 'error', 'warning'
                         title: response.status === 'success' ? 'Berhasil!' : (
@@ -564,25 +629,34 @@ $nama_lengkap = isset($_SESSION['nama_lengkap']) ? $_SESSION['nama_lengkap'] : $
                     }).then((result) => {
                         if (result.isConfirmed && response.redirect) {
                             window.location.href = response
-                                .redirect; // Redirect if 'redirect' URL is provided
+                                .redirect; // Redirect jika URL 'redirect' disediakan
                         } else if (result.isConfirmed && response.status ===
                             'success') {
-                            // If it's a success but no specific redirect (shouldn't happen with 'index.php' redirect)
-                            // Optionally, reload the form to show updated data or clear fields if staying on page
+                            // Jika berhasil tetapi tidak ada redirect spesifik (seharusnya tidak terjadi dengan redirect ke 'index.php')
+                            // Opsional, muat ulang form untuk menampilkan data yang diperbarui atau kosongkan bidang jika tetap di halaman
                             loadForm(role,
-                                currentId); // Reload to show updated data
+                                currentId
+                                ); // Muat ulang untuk menampilkan data yang diperbarui
                         }
                     });
                 },
                 error: function(xhr, status, error) {
-                    // Log the full response text for detailed debugging
+                    // Catat teks respons lengkap untuk debugging terperinci
                     console.error("AJAX Error:", status, error, xhr.responseText);
+                    let errorMessage =
+                        'Terjadi kesalahan saat mengirim data. Silakan coba lagi.';
+                    try {
+                        const jsonResponse = JSON.parse(xhr.responseText);
+                        if (jsonResponse && jsonResponse.message) {
+                            errorMessage = jsonResponse.message;
+                        }
+                    } catch (e) {
+                        // Bukan respons JSON, gunakan pesan umum
+                    }
                     Swal.fire({
                         icon: 'error',
                         title: 'Oops...',
-                        text: 'Terjadi kesalahan saat mengirim data. Silakan coba lagi. Detail: ' +
-                            (xhr.responseText ? JSON.parse(xhr.responseText)
-                                .message : error),
+                        text: errorMessage,
                         confirmButtonText: 'OK'
                     });
                 }
@@ -590,28 +664,36 @@ $nama_lengkap = isset($_SESSION['nama_lengkap']) ? $_SESSION['nama_lengkap'] : $
         });
     });
 
-    // Function to load dynamic forms via AJAX (GET request)
+    // Fungsi untuk memuat form dinamis via AJAX (permintaan GET)
     function loadForm(role, id_to_load) {
         var requestData = {
             load_form: role,
-            id_to_load: id_to_load // Pass the ID so the PHP can fetch specific data
+            id_to_load: id_to_load // Teruskan ID agar PHP dapat mengambil data spesifik
         };
 
         $.ajax({
-            url: 'edit_user.php', // Request HTML from *this* PHP file
+            url: 'edit_user.php', // Minta HTML dari file PHP *ini*
             type: 'GET',
             data: requestData,
             success: function(data) {
-                // Replace the content of the container inside the main form
+                // Ganti konten wadah di dalam form utama
                 $('#dynamic-form-container').html(data);
             },
             error: function(xhr, status, error) {
                 console.error("AJAX Load Form Error:", status, error, xhr.responseText);
+                let errorMessage = 'Gagal memuat form. Silakan coba lagi.';
+                try {
+                    const jsonResponse = JSON.parse(xhr.responseText);
+                    if (jsonResponse && jsonResponse.message) {
+                        errorMessage = jsonResponse.message;
+                    }
+                } catch (e) {
+                    // Bukan respons JSON, gunakan pesan umum
+                }
                 Swal.fire({
                     icon: 'error',
                     title: 'Oops...',
-                    text: 'Gagal memuat form. Silakan coba lagi. Detail: ' + (xhr.responseText ?
-                        JSON.parse(xhr.responseText).message : error),
+                    text: errorMessage,
                     confirmButtonText: 'OK'
                 });
             }

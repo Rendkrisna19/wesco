@@ -171,49 +171,60 @@ function print_form($data)
                         <tr>
                             <td class="border border-black p-2 font-medium">MAINHOLE 1</td>
                             <td class="border border-black p-2 w-6 text-center">:</td>
-                            <td class="border border-black p-2">SKH-000024</td>
+                            <td class="border border-black p-2">
+                                <?= htmlspecialchars($data['mainhole1'] ?? '-') ?></td>
                         </tr>
 
                         <tr>
                             <td class="border border-black p-2 font-medium">MAINHOLE 2</td>
                             <td class="border border-black p-2 w-6 text-center">:</td>
-                            <td class="border border-black p-2">SKH-000024</td>
+                            <td class="border border-black p-2"> <?= htmlspecialchars($data['mainhole2'] ?? '-') ?></td>
                         </tr>
 
                         <tr>
                             <td class="border border-black p-2 font-medium">MAINHOLE 3</td>
                             <td class="border border-black p-2 w-6 text-center">:</td>
-                            <td class="border border-black p-2">SKH-000024</td>
+                            <td class="border border-black p-2"> <?= htmlspecialchars($data['mainhole3'] ?? '-') ?></td>
                         </tr>
 
                         <tr>
                             <td class="border border-black p-2 font-medium">BOTTOM LOADER COVER</td>
                             <td class="border border-black p-2 w-6 text-center">:</td>
-                            <td class="border border-black p-2">SKH-000024</td>
+                            <td class="border border-black p-2"> <?= htmlspecialchars($data['mainhole4'] ?? '-') ?></td>
                         </tr>
 
                         <tr>
                             <td class="border border-black p-2 font-medium">BOTTOM LOADER VALVE 1</td>
                             <td class="border border-black p-2 w-6 text-center">:</td>
-                            <td class="border border-black p-2">SKH-000024</td>
+                            <td class="border border-black p-2">
+                                <?= htmlspecialchars($data['bottom_load_cov1'] ?? '-') ?></td>
                         </tr>
 
                         <tr>
                             <td class="border border-black p-2 font-medium">BOTTOM LOADER VALVE 2</td>
                             <td class="border border-black p-2 w-6 text-center">:</td>
-                            <td class="border border-black p-2">SKH-000024</td>
+                            <td class="border border-black p-2">
+                                <?= htmlspecialchars($data['bottom_load_cov2'] ?? '-') ?></td>
                         </tr>
 
                         <tr>
                             <td class="border border-black p-2 font-medium">BOTTOM LOADER VALVE 3</td>
                             <td class="border border-black p-2 w-6 text-center">:</td>
-                            <td class="border border-black p-2">SKH-000024</td>
+                            <td class="border border-black p-2">
+                                <?= htmlspecialchars($data['bottom_load_cov3'] ?? '-') ?></td>
                         </tr>
 
                         <tr>
                             <td class="border border-black p-2 font-medium">BOTTOM LOADER VALVE 4</td>
                             <td class="border border-black p-2 w-6 text-center">:</td>
-                            <td class="border border-black p-2">SKH-000024</td>
+                            <td class="border border-black p-2">
+                                <?= htmlspecialchars($data['bottom_load_cov4'] ?? '-') ?></td>
+                        </tr>
+                        <tr>
+                            <td class="border border-black p-2 font-medium">BOTTOM LOADER VALVE 5</td>
+                            <td class="border border-black p-2 w-6 text-center">:</td>
+                            <td class="border border-black p-2">
+                                <?= htmlspecialchars($data['bottom_load_cov5'] ?? '-') ?></td>
                         </tr>
 
                     </tbody>

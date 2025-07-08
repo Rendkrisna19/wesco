@@ -157,6 +157,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <input type="text" name="test_report_no"
                                 value="<?= htmlspecialchars($data['test_report_no']) ?>"
                                 class="w-full border border-gray-300 p-2 rounded-md">
+                            <label class="block text-gray-700 font-semibold">Test Report Suffix</label>
+                            <input type="text" name="test_report_suffix"
+                                value="<?= htmlspecialchars($data['test_report_let']) ?>"
+                                class="w-full border border-gray-300 p-2 rounded-md">
 
 
 

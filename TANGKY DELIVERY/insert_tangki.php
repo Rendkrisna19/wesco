@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $no_batch = $_POST['no_batch'];
     $source = $_POST['source'];
     $test_report_no = $_POST['test_report_no'];
-    // $test_report_suffix = $_POST['test_report_suffix'];
+    $test_report_suffix = $_POST['test_report_suffix'];
     $test_report_date = $_POST['test_report_date'];
     $temperature = $_POST['temperature'];
     $density = $_POST['density'];
@@ -187,6 +187,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     class="text-red-500">*</span></label>
                             <input type="text" id="test_report_no" name="test_report_no" class="form-input"
                                 placeholder="Masukkan Nomor Test Report" required />
+                        </div>
+                        <div>
+                            <label for="test_report_suffix" class="form-label"></label>
+                            <input type="text" id="test_report_suffix" name="test_report_suffix" value="PL2304/"
+                                class="form-input" placeholder="Contoh: PL2304/TR/202-S2" />
                         </div>
 
                         <div>

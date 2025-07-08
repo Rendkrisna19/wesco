@@ -132,7 +132,7 @@ $result_afrn = mysqli_query($conn, $query_afrn);
             mysqli_stmt_close($stmt4);
 
             mysqli_commit($conn);
-            echo "<script>alert('Data berhasil disimpan.'); window.location.href='insert_salibukur.php';</script>";
+            echo "<script>alert('Data berhasil disimpan.'); window.location.href='index.php';</script>";
             exit;
         } catch (Exception $e) {
             mysqli_rollback($conn);

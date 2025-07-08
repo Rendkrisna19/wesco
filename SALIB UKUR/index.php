@@ -1,18 +1,45 @@
 <?php
 session_start();
 
+// Cek status login
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
-    // If not logged in, redirect to login page
     header("Location: ../auth/index.php");
     exit;
 }
 
-$id_user = $_SESSION['id_user'];
-$username = $_SESSION['username'];
-// Assuming nama_lengkap is also set in session from login
-$nama_lengkap = isset($_SESSION['nama_lengkap']) ? $_SESSION['nama_lengkap'] : $username;
-include '../config/koneksi.php'; // koneksi mysqli
+include '../config/koneksi.php';
 
+// =========================================================================
+// MODIFIKASI DIMULAI DI SINI: MENGAMBIL INFO USER YANG LOGIN
+// =========================================================================
+
+// Ambil id_user dari session. Beri nilai default 0 jika tidak ada.
+$id_user = $_SESSION['id_user'] ?? 0;
+
+// Siapkan variabel dengan nilai default untuk mencegah error
+$username = 'Tamu';
+$nama_lengkap = 'Tamu';
+
+// Lakukan query hanya jika id_user valid
+if ($id_user > 0) {
+    // Siapkan query untuk mengambil username DAN nama_lengkap dalam satu kali jalan
+    $stmt_user = $conn->prepare("SELECT username, nama_lengkap FROM user WHERE id_user = ?");
+    
+    if ($stmt_user) {
+        $stmt_user->bind_param("i", $id_user);
+        $stmt_user->execute();
+        $result_user = $stmt_user->get_result();
+        
+        if ($result_user->num_rows > 0) {
+            $user_data = $result_user->fetch_assoc();
+            
+            // Isi kedua variabel dengan data yang benar dari database
+            $username = $user_data['username'];
+            $nama_lengkap = $user_data['nama_lengkap'];
+        }
+        $stmt_user->close();
+    }
+}
 try {
     // Mengambil semua data untuk daftar Salib Ukur
     // Di sini saya asumsikan idSegel di GET hanya untuk filter detail,
@@ -126,25 +153,25 @@ try {
                                 </thead>
                                 <tbody>
                                     <?php
-                                    $no = 1;
-                                    if ($result && $result->num_rows > 0):
-                                        while ($row = $result->fetch_assoc()):
-                                    ?>
+    $no = 1;
+    if ($result && $result->num_rows > 0):
+        while ($row = $result->fetch_assoc()):
+    ?>
                                     <tr class="border-b hover:bg-gray-50">
                                         <td class="py-2 px-4"><?= $no++ ?></td>
+
                                         <td class="py-2 px-4">
-                                            <?= htmlspecialchars($row['id_afrn']) . ' / ' . htmlspecialchars($row['no_afrn']) ?>
+                                            <?= htmlspecialchars($row['no_afrn']) ?>
                                         </td>
+
                                         <td class="py-2 px-4"><?= htmlspecialchars($row['tgl_afrn']) ?></td>
                                         <td class="py-2 px-4"><?= htmlspecialchars($row['no_polisi']) ?></td>
                                         <td class="py-2 px-4"><?= htmlspecialchars($row['volume']) ?></td>
                                         <td class="py-2 px-4">
                                             <?= htmlspecialchars($row['mainhole1']) ?><br>
-
                                         </td>
                                         <td class="py-2 px-4">
                                             <?= htmlspecialchars($row['bottom_load_cov1']) ?><br>
-
                                         </td>
                                         <td class="py-2 px-4 flex gap-2">
                                             <a href="edit_salib.php?idSegel=<?= htmlspecialchars($row['id_segel']) ?>"
@@ -159,9 +186,9 @@ try {
                                         </td>
                                     </tr>
                                     <?php
-                                        endwhile;
-                                    else:
-                                    ?>
+        endwhile;
+    else:
+    ?>
                                     <tr>
                                         <td colspan="8" class="text-center py-4 text-gray-500">Data tidak ditemukan.
                                         </td>

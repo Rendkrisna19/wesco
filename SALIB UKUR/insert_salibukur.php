@@ -7,13 +7,13 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     header("Location: ../auth/index.php");
     exit;
 }
-
+include('backend_salib_ukur.php');
+include('ajax_salibukur.php');
 $id_user = $_SESSION['id_user'];
 $username = $_SESSION['username'];
 // Assuming nama_lengkap is also set in session from login
 $nama_lengkap = isset($_SESSION['nama_lengkap']) ? $_SESSION['nama_lengkap'] : $username;
-include('backend_salib_ukur.php');
-include('ajax_salibukur.php');
+
 ?>
 
 <!DOCTYPE html>
@@ -24,6 +24,9 @@ include('ajax_salibukur.php');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pencatatan Hasil Pemeriksaan Bridger</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
     <style>
     .form-section {
         background: #f8f9fa;

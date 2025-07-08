@@ -1,16 +1,45 @@
 <?php
 session_start();
 
+// Cek status login
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
-    // If not logged in, redirect to login page
     header("Location: ../auth/index.php");
     exit;
 }
 
-$id_user = $_SESSION['id_user'];
-$username = $_SESSION['username'];
-// Assuming nama_lengkap is also set in session from login
-$nama_lengkap = isset($_SESSION['nama_lengkap']) ? $_SESSION['nama_lengkap'] : $username;
+include '../config/koneksi.php';
+
+// =========================================================================
+// MODIFIKASI DIMULAI DI SINI: MENGAMBIL INFO USER YANG LOGIN
+// =========================================================================
+
+// Ambil id_user dari session. Beri nilai default 0 jika tidak ada.
+$id_user = $_SESSION['id_user'] ?? 0;
+
+// Siapkan variabel dengan nilai default untuk mencegah error
+$username = 'Tamu';
+$nama_lengkap = 'Tamu';
+
+// Lakukan query hanya jika id_user valid
+if ($id_user > 0) {
+    // Siapkan query untuk mengambil username DAN nama_lengkap dalam satu kali jalan
+    $stmt_user = $conn->prepare("SELECT username, nama_lengkap FROM user WHERE id_user = ?");
+    
+    if ($stmt_user) {
+        $stmt_user->bind_param("i", $id_user);
+        $stmt_user->execute();
+        $result_user = $stmt_user->get_result();
+        
+        if ($result_user->num_rows > 0) {
+            $user_data = $result_user->fetch_assoc();
+            
+            // Isi kedua variabel dengan data yang benar dari database
+            $username = $user_data['username'];
+            $nama_lengkap = $user_data['nama_lengkap'];
+        }
+        $stmt_user->close();
+    }
+}
 
 // Include database connection
 // Make sure this path is correct relative to where this dashboard.php file is.

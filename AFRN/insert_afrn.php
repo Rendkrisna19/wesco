@@ -4,52 +4,19 @@ include '../config/koneksi.php';
 
 // Cek status login
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
-    header("Location: ../auth/login.php");
+    header("Location: ../auth/login.php"); // Sesuaikan dengan path login Anda
     exit;
 }
 
 $id_user = $_SESSION['id_user'];
 $username = $_SESSION['username'];
-// Assuming nama_lengkap is also set in session from login
 $nama_lengkap = isset($_SESSION['nama_lengkap']) ? $_SESSION['nama_lengkap'] : $username;
 
-// Ambil data user dari database
-$stmt = $conn->prepare("SELECT username FROM user WHERE id_user = ?");
-$stmt->bind_param("i", $id_user);
-$stmt->execute();
-$result = $stmt->get_result();
-
-if ($result->num_rows > 0) {
-    $user_data = $result->fetch_assoc();
-    // Variabel $username DIBUAT dan DIISI DI SINI
-    $username = $user_data['username'];
-} else {
-    $username = 'User Tidak Ditemukan';
-}
-$stmt->close();
-
-
-// Ambil semua data yang dibutuhkan
-$bridger_result = mysqli_query($conn, "
-SELECT bridger.id_bridger, bridger.no_polisi, bridger.volume, bridger.id_trans, transportir.nama_trans AS transportir
-FROM bridger
-LEFT JOIN transportir ON bridger.id_trans = transportir.id_trans
-");
-// Reset pointer agar bisa digunakan lagi di loop form jika dibutuhkan, atau jika query ini sudah final
-// Ini penting jika Anda mengakses $bridger_result lebih dari sekali
-mysqli_data_seek($bridger_result, 0);
-
-
+// Ambil data untuk dropdowns
+$bridger_result = mysqli_query($conn, "SELECT bridger.id_bridger, bridger.no_polisi, bridger.volume, transportir.nama_trans AS transportir FROM bridger LEFT JOIN transportir ON bridger.id_trans = transportir.id_trans");
 $destinasi_result = mysqli_query($conn, "SELECT * FROM destinasi");
-mysqli_data_seek($destinasi_result, 0);
-
-
 $driver_result = mysqli_query($conn, "SELECT * FROM driver");
-mysqli_data_seek($driver_result, 0);
-
-
 $tangki_result = mysqli_query($conn, "SELECT * FROM tangki");
-mysqli_data_seek($tangki_result, 0);
 
 // Inisialisasi variabel untuk pesan SweetAlert
 $swal_icon = '';
@@ -57,66 +24,109 @@ $swal_title = '';
 $swal_text = '';
 $swal_redirect_url = '';
 
-// Jika form disubmit
+
+//======================================================================
+// FUNGSI UNTUK MEMFORMAT NOMOR AFRN
+//======================================================================
+function format_afrn_number($id, $tanggal) {
+    $roman_months = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI', 7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'];
+    $date_obj = date_create($tanggal);
+    $month = (int)date_format($date_obj, 'n');
+    $year = date_format($date_obj, 'Y');
+    $roman_month = $roman_months[$month];
+    return sprintf('%d/AFRN/%s/%d', $id, $roman_month, $year);
+}
+
+
+//======================================================================
+// PROSES FORM SUBMISSION
+//======================================================================
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-$tgl_afrn = date('Y-m-d');
-$no_afrn = 'AFRN-' . time(); // Bisa diganti UUID
-$no_bpp = mysqli_real_escape_string($conn, $_POST['no_bpp']);
-$id_bridger = $_POST['id_bridger'];
-$id_destinasi = $_POST['id_destinasi'];
-$id_driver = $_POST['id_driver']; // Variabel ini ada, tapi tidak digunakan di INSERT AFRN
-$id_tangki = $_POST['id_tangki'];
-// Ambil nama lengkap dari variabel yang sudah disiapkan dari session di bagian atas file
-$dibuat = $username; 
-$diperiksa = mysqli_real_escape_string($conn, $_POST['diperiksa']);
-$disetujui = mysqli_real_escape_string($conn, $_POST['disetujui']);
-$rit = (int) $_POST['rit'];
+    // Ambil semua data dari form
+    $tgl_afrn = date('Y-m-d');
+    $no_bpp = $_POST['no_bpp'];
+    $id_bridger = $_POST['id_bridger'];
+    $id_destinasi = $_POST['id_destinasi'];
+    $id_driver = $_POST['id_driver'];
+    $id_tangki = $_POST['id_tangki'];
+    $dibuat = $username;
+    $diperiksa = $_POST['diperiksa'];
+    $disetujui = $_POST['disetujui'];
+    $rit = (int)$_POST['rit'];
 
-// Ambil id_transportir berdasarkan id_bridger
-$get_trans = mysqli_query($conn, "
-SELECT id_trans FROM bridger WHERE id_bridger = '$id_bridger'
-");
-if (mysqli_num_rows($get_trans) == 0) {
-// Set pesan SweetAlert error
-$swal_icon = 'error';
-$swal_title = 'Gagal!';
-$swal_text = 'ID Bridger tidak ditemukan.';
-} else {
-$id_transportasi = mysqli_fetch_assoc($get_trans)['id_trans'];
+    // Ambil id_transportir berdasarkan id_bridger
+    $stmt_trans = $conn->prepare("SELECT id_trans FROM bridger WHERE id_bridger = ?");
+    $stmt_trans->bind_param("i", $id_bridger);
+    $stmt_trans->execute();
+    $trans_result = $stmt_trans->get_result();
+    
+    if ($trans_result->num_rows == 0) {
+        $swal_icon = 'error';
+        $swal_title = 'Gagal!';
+        $swal_text = 'ID Bridger tidak ditemukan.';
+    } else {
+        $id_transportasi = $trans_result->fetch_assoc()['id_trans'];
+        
+        // =========================================================================
+        // == MODIFIKASI UTAMA: MENGGUNAKAN TRANSAKSI DATABASE ==
+        // =========================================================================
+        
+        $conn->begin_transaction(); // Mulai transaksi
 
-// Query INSERT INTO AFRN
-// Pastikan kolom di tabel 'afrn' sesuai dengan urutan di VALUES dan bind_param.
-// Jika id_driver perlu disimpan, tambahkan 'id_driver' ke query ini dan parameter di bind_param.
-// Berdasarkan query Anda, id_driver tidak disimpan ke AFRN.
-$query = "INSERT INTO afrn (
-tgl_afrn, no_afrn, no_bpp, id_bridger, id_transportir, id_destinasi, id_tangki,
-dibuat, diperiksa, disetujui, rit
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try {
+            // LANGKAH 1: INSERT data ke 'afrn' tanpa 'no_afrn'
+            // Kolom 'no_afrn' sengaja dikosongkan untuk diisi nanti
+            $query_insert = "INSERT INTO afrn (
+                tgl_afrn, no_bpp, id_bridger, id_transportir, id_destinasi, 
+                id_tangki, id_driver, dibuat, diperiksa, disetujui, rit
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            
+            $stmt_insert = $conn->prepare($query_insert);
+            // Tipe data disesuaikan (11 placeholder), 's' untuk no_bpp dihilangkan sementara
+            $stmt_insert->bind_param("ssiiisissii",
+                $tgl_afrn, $no_bpp, $id_bridger, $id_transportasi, $id_destinasi,
+                $id_tangki, $id_driver, $dibuat, $diperiksa, $disetujui, $rit
+            );
+            $stmt_insert->execute();
 
-$stmt = mysqli_prepare($conn, $query);
-// Tipe data untuk bind_param: sssiiiisssi
-// (tgl_afrn:s, no_afrn:s, no_bpp:s, id_bridger:i, id_transportir:i, id_destinasi:i, id_tangki:i,
-// dibuat:s, diperiksa:s, disetujui:s, rit:i)
-mysqli_stmt_bind_param($stmt, "sssiiiisssi",
-$tgl_afrn, $no_afrn, $no_bpp, $id_bridger, $id_transportasi, $id_destinasi,
-$id_tangki, $dibuat, $diperiksa, $disetujui, $rit
-);
+            // LANGKAH 2: Dapatkan ID dari baris yang baru saja di-insert
+            $last_id_afrn = $conn->insert_id;
 
-if (mysqli_stmt_execute($stmt)) {
-$swal_icon = 'success';
-$swal_title = 'Berhasil!';
-$swal_text = 'Data AFRN berhasil disimpan!';
-$swal_redirect_url = 'index.php'; // Arahkan ke index.php setelah SweetAlert ditutup
-} else {
-$swal_icon = 'error';
-$swal_title = 'Gagal!';
-$swal_text = 'Gagal menyimpan data AFRN: ' . mysqli_error($conn);
-}
-mysqli_stmt_close($stmt); // Tutup statement setelah digunakan
-}
+            // LANGKAH 3: Buat no_afrn yang sudah diformat menggunakan ID tersebut
+            $no_afrn_formatted = format_afrn_number($last_id_afrn, $tgl_afrn);
+
+            // LANGKAH 4: UPDATE baris yang sama untuk mengisi kolom 'no_afrn'
+            $query_update = "UPDATE afrn SET no_afrn = ? WHERE id_afrn = ?";
+            $stmt_update = $conn->prepare($query_update);
+            $stmt_update->bind_param("si", $no_afrn_formatted, $last_id_afrn);
+            $stmt_update->execute();
+            
+            // Jika semua query berhasil, simpan perubahan
+            $conn->commit();
+
+            // Siapkan pesan sukses
+            $swal_icon = 'success';
+            $swal_title = 'Berhasil!';
+            $swal_text = 'Data AFRN dengan No. ' . $no_afrn_formatted . ' berhasil disimpan!';
+            $swal_redirect_url = 'index.php';
+
+        } catch (mysqli_sql_exception $exception) {
+            // Jika ada satu saja query yang gagal, batalkan semua perubahan
+            $conn->rollback();
+
+            // Siapkan pesan error
+            $swal_icon = 'error';
+            $swal_title = 'Gagal!';
+            $swal_text = 'Gagal menyimpan data AFRN: ' . $exception->getMessage();
+        } finally {
+            // Tutup semua statement yang sudah dibuka
+            if (isset($stmt_insert)) $stmt_insert->close();
+            if (isset($stmt_update)) $stmt_update->close();
+        }
+    }
+    $stmt_trans->close();
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="id">
 
@@ -127,10 +137,8 @@ mysqli_stmt_close($stmt); // Tutup statement setelah digunakan
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
-    /* Custom font if 'font-modify' isn't a standard Tailwind font */
     .font-modify {
         font-family: sans-serif;
-        /* Replace with your desired font, e.g., 'Roboto', 'Arial' */
     }
     </style>
 </head>
@@ -185,7 +193,7 @@ mysqli_stmt_close($stmt); // Tutup statement setelah digunakan
                                 class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                 required onchange="setBridgerData(this)">
                                 <option class="text-gray-400" value="">Pilih Nomor Polisi</option>
-                                <?php // Reset pointer for $bridger_result before looping again for the form
+                                <?php
                                 mysqli_data_seek($bridger_result, 0); 
                                 while ($b = mysqli_fetch_assoc($bridger_result)): ?>
                                 <option value="<?= htmlspecialchars($b['id_bridger']) ?>"
@@ -217,7 +225,7 @@ mysqli_stmt_close($stmt); // Tutup statement setelah digunakan
                                 class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                 required>
                                 <option value="">Pilih Destinasi</option>
-                                <?php // Reset pointer for $destinasi_result
+                                <?php
                                 mysqli_data_seek($destinasi_result, 0);
                                 while ($d = mysqli_fetch_assoc($destinasi_result)): ?>
                                 <option value="<?= htmlspecialchars($d['id_destinasi']) ?>">
@@ -233,7 +241,7 @@ mysqli_stmt_close($stmt); // Tutup statement setelah digunakan
                                 class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                 required>
                                 <option value="">Pilih Driver</option>
-                                <?php // Reset pointer for $driver_result
+                                <?php
                                 mysqli_data_seek($driver_result, 0);
                                 while ($p = mysqli_fetch_assoc($driver_result)): ?>
                                 <option value="<?= htmlspecialchars($p['id_driver']) ?>">
@@ -259,7 +267,7 @@ mysqli_stmt_close($stmt); // Tutup statement setelah digunakan
                                 class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                 required onchange="setTangkiData(this)">
                                 <option value="">Pilih Tangki</option>
-                                <?php // Reset pointer for $tangki_result
+                                <?php
                                 mysqli_data_seek($tangki_result, 0);
                                 while ($t = mysqli_fetch_assoc($tangki_result)): ?>
                                 <option value="<?= htmlspecialchars($t['id_tangki']) ?>"
@@ -350,7 +358,7 @@ mysqli_stmt_close($stmt); // Tutup statement setelah digunakan
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
 
-    <?php if ($swal_icon): // Tampilkan SweetAlert jika ada pesan ?>
+    <?php if ($swal_icon): ?>
     <script>
     Swal.fire({
         icon: '<?php echo $swal_icon; ?>',

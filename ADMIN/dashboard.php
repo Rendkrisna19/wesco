@@ -101,10 +101,20 @@ if ($result_paginated) {
             <div class="bg-white shadow p-6 flex justify-between items-center border-b border-gray-200">
                 <h1 class="text-2xl font-bold text-cyan-700">Selamat Datang di Wesco,
                     <?= htmlspecialchars($nama_lengkap_session) ?>!</h1>
-                <div class="flex items-center space-x-3">
+                <div class="relative flex items-center space-x-3 group">
                     <span class="text-gray-600"><?= htmlspecialchars($nama_lengkap_session) ?></span>
                     <img src="https://media.istockphoto.com/id/1300845620/id/vektor/ikon-pengguna-datar-terisolasi-pada-latar-belakang-putih-simbol-pengguna-ilustrasi-vektor.jpg?s=612x612&w=0&k=20&c=QN0LOsRwA1dHZz9lsKavYdSqUUnis3__FQLtZTQ--Ro="
                         alt="User" class="w-8 h-8 rounded-full">
+
+                    <div
+                        class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out invisible group-hover:visible">
+                        <a href="../auth/index.php"
+                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-cyan-700 hover:text-white">
+                            Logout
+                        </a>
+                        <form id="logout-form" action="/logout.php" method="POST" style="display: none;">
+                        </form>
+                    </div>
                 </div>
             </div>
 
